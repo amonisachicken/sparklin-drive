@@ -44,6 +44,10 @@ jobs:
       - name: cmake
         run: brew install cmake
 
+      - name: cargo-nih-plug
+        # 打包靠这个 cargo 子命令，必须与 rustomp-mac-plugin/deps.lock 里的 nih-plug rev 一致
+        run: cargo install --git https://github.com/robbert-vdh/nih-plug.git --rev de42101 cargo-nih-plug --locked
+
       - name: Fetch packer third-party sources
         working-directory: rustomp-mac-plugin
         run: ./scripts/fetch-third-party.sh
@@ -64,18 +68,25 @@ jobs:
         env:
           RUSTOMP_MAC_PLUGIN: ${{ github.workspace }}/rustomp-mac-plugin
           RUSTOMP_ROOT: ${{ github.workspace }}/rustomp
-        run: ./scripts/build.sh --no-install | tee /tmp/build.log
+        run: |
+          set -o pipefail            # 关键：没有它，`| tee` 会让失败变成成功
+          ./scripts/build.sh --no-install 2>&1 | tee /tmp/build.log
 
       - name: Collect artifacts
         working-directory: sparklin-drive
         run: |
+          set -euo pipefail
           mkdir -p dist
-          grep '^ARTIFACT: ' /tmp/build.log | sed 's/^ARTIFACT: //' | while read -r p; do
-            cp -R "$p" dist/ || true
-          done
+          n=0
+          while IFS= read -r p; do
+            cp -R "$p" dist/; n=$((n+1))
+          done < <(grep '^ARTIFACT: ' /tmp/build.log | sed 's/^ARTIFACT: //')
+          echo "收集到 $n 个产物"
           ls -la dist
+          [ "$n" -ge 1 ] || { echo "✗ 没有产物，构建其实是失败的"; exit 1; }
 
       - uses: actions/upload-artifact@v4
         with:
           name: sparklin-drive-macos
           path: sparklin-drive/dist
+          if-no-files-found: error
