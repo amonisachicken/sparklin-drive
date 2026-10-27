@@ -29,9 +29,10 @@ cd sparklin-drive
 `build.sh` 会：体检 → 校验生成物没漂移 → 调打包工具 → 安装到 `~/Library/Audio/Plug-Ins/` → 打印 `ARTIFACT:` 列表。
 装完在 Logic / 任何 AU·VST3·CLAP 宿主里就能看到 **Sparklin Drive Mono** 与 **Sparklin Drive Stereo**（两个独立身份）。
 
-> 第一次跑之前需要两样东西（`./scripts/build.sh doctor` 会告诉你缺什么）：
-> Rust + Xcode 命令行工具 + cmake，以及打包工具
-> [rustomp-mac-plugin](https://github.com/amonisachicken/rustomp-mac-plugin)。
+> 第一次跑之前需要：Rust + Xcode 命令行工具 + cmake，以及**放在本仓同级目录**的
+> [rustomp](https://github.com/amonisachicken/rustomp)（框架）与
+> [rustomp-mac-plugin](https://github.com/amonisachicken/rustomp-mac-plugin)（打包工具）。
+> 缺什么 `./scripts/build.sh doctor` 会直接打印克隆命令（含正确的 tag）。
 > 详细步骤与故障排查见 **[BUILDING.md](BUILDING.md)**。
 
 ```bash

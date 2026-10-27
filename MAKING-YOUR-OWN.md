@@ -10,10 +10,15 @@
 ## 0. 先跑通再改（强烈建议）
 
 ```bash
+# 三个仓放同一个目录（框架与打包工具是本仓的同级）
+mkdir -p ~/projects && cd ~/projects
+git clone --depth 1 --branch v0.1.0 https://github.com/amonisachicken/rustomp.git
+git clone https://github.com/amonisachicken/rustomp-mac-plugin.git
 git clone git@github.com:amonisachicken/sparklin-drive.git my-drive
-cd my-drive
-./scripts/build.sh            # 确认原样能出插件（约 3–5 分钟，首次要编 nih-plug + egui）
+cd my-drive && ./scripts/build.sh     # 确认原样能出插件（约 3–5 分钟，首次要编 nih-plug + egui）
 ```
+
+> 缺依赖时 `./scripts/build.sh doctor` 会直接告诉你"在哪个目录、执行什么 git clone"。
 
 能跑通说明工具链、打包工具、框架都对。**先别改任何东西** —— 出问题时你才知道是"环境"还是"我的改动"。
 

@@ -18,7 +18,15 @@ set -euo pipefail
 ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 cd "$ROOT"
 
-PACKER="${RUSTOMP_MAC_PLUGIN:-$HOME/develop/rustomp-mac-plugin}"
+# 依赖约定：三个仓放在**同一个目录**下（本仓的同级）
+#
+#   some-dir/
+#     rustomp/                ← 框架
+#     rustomp-mac-plugin/     ← 打包工具
+#     sparklin-drive/         ← 本仓（你在跑的 build.sh 在这）
+#
+# 不假设任何绝对路径（每台机器不同）；两个环境变量只作显式覆盖用。
+PACKER="${RUSTOMP_MAC_PLUGIN:-$ROOT/../rustomp-mac-plugin}"
 FRAMEWORK="${RUSTOMP_ROOT:-$ROOT/../rustomp}"
 
 say()  { printf '\033[1m==> %s\033[0m\n' "$*"; }
@@ -34,25 +42,37 @@ framework_tag() {
 framework_hint() {
     _tag="$(framework_tag)"
     _tag="${_tag:-v0.1.0}"
+    _parent="$(dirname "$ROOT")"
+    _me="$(basename "$ROOT")"
     cat >&2 <<EOT
   ✗ 找不到 rustomp 框架 —— 读 rustomp.toml、校验生成物都要用它
 
-  装一次即可（用它钉的 tag，与 Cargo.toml 一致）：
-    git clone --depth 1 --branch ${_tag} https://github.com/amonisachicken/rustomp.git ~/develop/rustomp
-    export RUSTOMP_ROOT=~/develop/rustomp        # 建议写进 shell profile
+  约定：三个仓放在**同一个目录**下（本仓的同级）
 
-  或者放到本仓的**同级目录**（最省事，脚本会自动找到）：
-    git clone --depth 1 --branch ${_tag} https://github.com/amonisachicken/rustomp.git ../rustomp
+    ${_parent}/
+      rustomp/                 ← 缺这个
+      rustomp-mac-plugin/
+      ${_me}/    ← 你在这里
+
+  在这个目录里执行（tag 与本仓 Cargo.toml 一致）：
+
+    cd "${_parent}"
+    git clone --depth 1 --branch ${_tag} https://github.com/amonisachicken/rustomp.git rustomp
+
+  克隆完直接重跑 ./scripts/build.sh 即可，**不需要设任何环境变量**。
 
   仓库：https://github.com/amonisachicken/rustomp
 EOT
 }
 
 locate_framework() {
-    if [ -f "${FRAMEWORK}/tools/meta/plugin_meta.py" ]; then return 0; fi
-    for cand in "$HOME/develop/rustomp" "$ROOT/../rustomp"; do
-        if [ -f "${cand}/tools/meta/plugin_meta.py" ]; then FRAMEWORK="$(cd "$cand" && pwd)"; return 0; fi
-    done
+    if [ -f "${FRAMEWORK}/tools/meta/plugin_meta.py" ]; then
+        FRAMEWORK="$(cd "$FRAMEWORK" && pwd)"; return 0
+    fi
+    # 约定位置：本仓的同级目录
+    if [ -f "$ROOT/../rustomp/tools/meta/plugin_meta.py" ]; then
+        FRAMEWORK="$(cd "$ROOT/../rustomp" && pwd)"; return 0
+    fi
     return 1
 }
 
@@ -71,12 +91,15 @@ doctor() {
         cat >&2 <<EOT
   ✗ 找不到打包工具（${PACKER}/pack.sh）
 
-  打包在独立仓库里，装一次即可：
-    git clone git@github.com:amonisachicken/rustomp-mac-plugin.git ~/develop/rustomp-mac-plugin
-    export RUSTOMP_MAC_PLUGIN=~/develop/rustomp-mac-plugin
+  按约定，它和框架一起放在**本仓的同级目录**：
 
-  首次还要拉打包用的第三方源码：
-    ~/develop/rustomp-mac-plugin/scripts/fetch-third-party.sh
+    cd "$(dirname "$ROOT")" && git clone https://github.com/amonisachicken/rustomp-mac-plugin.git
+    ./rustomp-mac-plugin/scripts/fetch-third-party.sh      # 首次：拉 clap-wrapper 等（约 12 MB）
+
+  然后重跑 ./scripts/build.sh，不需要设环境变量。
+  （钉版本：git -C ./rustomp-mac-plugin checkout v0.1.4）
+
+  仓库：https://github.com/amonisachicken/rustomp-mac-plugin
 EOT
         return 1
     fi

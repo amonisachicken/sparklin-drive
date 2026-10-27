@@ -19,6 +19,8 @@ jobs:
         with:
           path: sparklin-drive
 
+      # 三个仓都 checkout 到同一个目录（同级）——和 build.sh 的"同级目录"约定一致，
+      # 所以不需要 RUSTOMP_ROOT / RUSTOMP_MAC_PLUGIN 任何环境变量。
       - name: Checkout framework (rustomp)
         uses: actions/checkout@v4
         with:
@@ -54,10 +56,7 @@ jobs:
 
       - name: Doctor
         working-directory: sparklin-drive
-        env:
-          RUSTOMP_MAC_PLUGIN: ${{ github.workspace }}/rustomp-mac-plugin
-          RUSTOMP_ROOT: ${{ github.workspace }}/rustomp
-        run: ./scripts/build.sh doctor
+        run: ./scripts/build.sh doctor          # 同级目录自动发现，无环境变量
 
       - name: Test
         working-directory: sparklin-drive
@@ -65,9 +64,6 @@ jobs:
 
       - name: Build (AU/VST3/CLAP, no install)
         working-directory: sparklin-drive
-        env:
-          RUSTOMP_MAC_PLUGIN: ${{ github.workspace }}/rustomp-mac-plugin
-          RUSTOMP_ROOT: ${{ github.workspace }}/rustomp
         run: |
           set -o pipefail            # 关键：没有它，`| tee` 会让失败变成成功
           ./scripts/build.sh --no-install 2>&1 | tee /tmp/build.log

@@ -11,13 +11,25 @@
 | python3 | ≥ 3.11 | `python3 -V` | 系统自带或 `brew install python` |
 | 网络 | 首次需要 | — | 拉 rustomp / nih-plug / 打包用第三方源码 |
 
-打包工具（**独立仓库**）：[rustomp-mac-plugin](https://github.com/amonisachicken/rustomp-mac-plugin)
+**依赖约定：三个仓放在同一个目录（本仓的同级）。** 脚本会自动找到它们，不需要设任何环境变量。
+
+```text
+some-dir/
+  rustomp/                 ← 框架（读清单 / 校验生成物）
+  rustomp-mac-plugin/      ← 打包工具（AU/VST3/CLAP）
+  sparklin-drive/          ← 本仓
+```
 
 ```bash
-git clone git@github.com:amonisachicken/rustomp-mac-plugin.git ~/develop/rustomp-mac-plugin
-export RUSTOMP_MAC_PLUGIN=~/develop/rustomp-mac-plugin       # 建议写进 shell profile
-~/develop/rustomp-mac-plugin/scripts/fetch-third-party.sh    # 只需一次（clap-wrapper / CLAP / AudioUnitSDK）
+cd some-dir
+git clone --depth 1 --branch v0.1.0 https://github.com/amonisachicken/rustomp.git
+git clone https://github.com/amonisachicken/rustomp-mac-plugin.git
+./rustomp-mac-plugin/scripts/fetch-third-party.sh     # 只需一次（约 12 MB）
+cd sparklin-drive && ./scripts/build.sh
 ```
+
+> 缺哪个仓、该在哪执行什么命令，`./scripts/build.sh doctor` 会直接打印出来
+> （克隆命令里的 tag 自动取自本仓 `Cargo.toml`）。
 
 一条命令体检：
 
@@ -86,8 +98,8 @@ cargo run --release --manifest-path ../rustomp/crates/rustomp-gen/Cargo.toml -- 
 
 | 现象 | 原因 / 处理 |
 |---|---|
-| `找不到 macOS 打包工具` | 设 `RUSTOMP_MAC_PLUGIN`（见上）；或把 rustomp-mac-plugin clone 到 `~/develop/` |
-| `找不到 rustomp 框架` | 脚本会打印克隆命令。照做即可，最省事是放在本仓**同级**：`git clone --depth 1 --branch <tag> https://github.com/amonisachicken/rustomp.git ../rustomp`（`<tag>` 见 `Cargo.toml` 里的 `tag = "..."`） |
+| `找不到 macOS 打包工具` | 它要和本仓**同级**：`cd .. && git clone https://github.com/amonisachicken/rustomp-mac-plugin.git` |
+| `找不到 rustomp 框架` | 同上，同级：`cd .. && git clone --depth 1 --branch <tag> https://github.com/amonisachicken/rustomp.git rustomp`（`<tag>` 见本仓 `Cargo.toml`）；`doctor` 会直接把这条命令打印出来 |
 | 确实不想装框架（不推荐） | `RUSTOMP_SKIP_DRIFT_CHECK=1 ./scripts/build.sh` —— 会跳过"生成物是否过期"的守卫 |
 | `cannot specify features for packages outside of workspace` | 插件被放进了别的 Rust 项目的目录树里（`cargo-nih-plug` 会向上找最顶层 `Cargo.toml`）；把本仓放在独立目录 |
 | `生成物与 rustomp.toml 不一致` | 改了网表/参数却没重新生成 → 按上面第 2、3 步重跑 |
