@@ -13,7 +13,7 @@ jobs:
     runs-on: macos-14            # arm64 机器；universal 需要两个 target
     env:
       RUSTOMP_TAG: v0.1.0
-      PACKER_TAG: v0.1.1   # v0.1.0 的 pack.sh 在干净 checkout 里会炸（见 DEVLOG E74）
+      PACKER_TAG: v0.1.2   # v0.1.0 坏（全角变量）、v0.1.1 缺 doctor 检查；见 DEVLOG E74/E75
     steps:
       - uses: actions/checkout@v4
         with:
