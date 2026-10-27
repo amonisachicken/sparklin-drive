@@ -31,7 +31,7 @@ pub const META_VST3_ID: [u8; 16] = *b"SpXXXXXXXXXXXS01";
 pub const META_VST3_ID: [u8; 16] = *b"SpXXXXXXXXXXXV01";
 
 pub const META_VENDOR: &str = "HONEYPIE EFFECTS";
-pub const META_URL: &str = "https://github.com/amonisachicken/rustomp";
+pub const META_URL: &str = "https://github.com/amonisachicken/sparklin-drive";
 pub const META_EMAIL: &str = "";
 pub const META_DESCRIPTION: &str = "";
 pub const META_CLAP_DESCRIPTION: Option<&str> = Some(META_DESCRIPTION);

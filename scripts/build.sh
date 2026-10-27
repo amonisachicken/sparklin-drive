@@ -80,6 +80,8 @@ esac
 case "${1:-build}" in
     doctor) doctor ;;
     test)
+        # 测试也要先校验生成物：本地改完 toml/网表忘了重新生成，测试是绿的但发布出去是旧的
+        check_generated
         say "测试（不需要 ngspice）"
         cargo test --release
         ;;
