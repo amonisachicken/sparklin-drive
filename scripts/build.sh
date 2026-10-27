@@ -71,6 +71,12 @@ check_generated() {
        （电路侧）${FRAMEWORK}/scripts/make-netlist.sh $ROOT/circuit/netlist"
 }
 
+# 无子命令（或以 - 开头）时按 build 处理，参数透传给打包工具
+if [ $# -eq 0 ]; then set -- build; fi
+case "$1" in
+    -*) set -- build "$@" ;;
+esac
+
 case "${1:-build}" in
     doctor) doctor ;;
     test)
