@@ -13,7 +13,7 @@ jobs:
     runs-on: macos-14            # arm64 机器；universal 需要两个 target
     env:
       RUSTOMP_TAG: v0.1.0
-      PACKER_TAG: v0.1.3   # v0.1.2 的 doctor 在 pipefail 下会误报缺 cargo-nih-plug
+      PACKER_TAG: v0.1.4
     steps:
       - uses: actions/checkout@v4
         with:
