@@ -87,6 +87,8 @@ cargo run --release --manifest-path ../rustomp/crates/rustomp-gen/Cargo.toml -- 
 | 现象 | 原因 / 处理 |
 |---|---|
 | `找不到 macOS 打包工具` | 设 `RUSTOMP_MAC_PLUGIN`（见上）；或把 rustomp-mac-plugin clone 到 `~/develop/` |
+| `找不到 rustomp 框架` | 脚本会打印克隆命令。照做即可，最省事是放在本仓**同级**：`git clone --depth 1 --branch <tag> https://github.com/amonisachicken/rustomp.git ../rustomp`（`<tag>` 见 `Cargo.toml` 里的 `tag = "..."`） |
+| 确实不想装框架（不推荐） | `RUSTOMP_SKIP_DRIFT_CHECK=1 ./scripts/build.sh` —— 会跳过"生成物是否过期"的守卫 |
 | `cannot specify features for packages outside of workspace` | 插件被放进了别的 Rust 项目的目录树里（`cargo-nih-plug` 会向上找最顶层 `Cargo.toml`）；把本仓放在独立目录 |
 | `生成物与 rustomp.toml 不一致` | 改了网表/参数却没重新生成 → 按上面第 2、3 步重跑 |
 | `error: failed to load manifest … rustomp-dsp` | 网络问题（首次要拉 rustomp 的 tag）；`source ~/vpn.env` 后重试 |

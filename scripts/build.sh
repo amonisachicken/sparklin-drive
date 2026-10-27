@@ -25,6 +25,29 @@ say()  { printf '\033[1m==> %s\033[0m\n' "$*"; }
 warn() { printf '  ! %s\n' "$*" >&2; }
 die()  { printf '✗ %s\n' "$*" >&2; exit 1; }
 
+# 插件钉的框架 tag（提示里用，随 Cargo.toml 自动变）
+framework_tag() {
+    grep -oE 'tag = "v[0-9]+\.[0-9]+\.[0-9]+"' "$ROOT/Cargo.toml" 2>/dev/null \
+        | head -1 | sed 's/tag = "//; s/"$//'
+}
+
+framework_hint() {
+    _tag="$(framework_tag)"
+    _tag="${_tag:-v0.1.0}"
+    cat >&2 <<EOT
+  ✗ 找不到 rustomp 框架 —— 读 rustomp.toml、校验生成物都要用它
+
+  装一次即可（用它钉的 tag，与 Cargo.toml 一致）：
+    git clone --depth 1 --branch ${_tag} https://github.com/amonisachicken/rustomp.git ~/develop/rustomp
+    export RUSTOMP_ROOT=~/develop/rustomp        # 建议写进 shell profile
+
+  或者放到本仓的**同级目录**（最省事，脚本会自动找到）：
+    git clone --depth 1 --branch ${_tag} https://github.com/amonisachicken/rustomp.git ../rustomp
+
+  仓库：https://github.com/amonisachicken/rustomp
+EOT
+}
+
 locate_framework() {
     if [ -f "${FRAMEWORK}/tools/meta/plugin_meta.py" ]; then return 0; fi
     for cand in "$HOME/develop/rustomp" "$ROOT/../rustomp"; do
@@ -35,6 +58,12 @@ locate_framework() {
 
 doctor() {
     say "依赖体检"
+    # 先查框架：它是打包工具读清单的前提，缺了后面的报错会很晦涩
+    if ! locate_framework; then
+        framework_hint
+        return 1
+    fi
+    printf '  ✓ 框架：%s\n' "$FRAMEWORK"
     if [ -x "${PACKER}/pack.sh" ]; then
         PLUGIN_DIR="$ROOT" "${PACKER}/pack.sh" --help >/dev/null 2>&1 || true
         "${PACKER}/scripts/doctor.sh" || die "打包工具体检未通过"
@@ -51,18 +80,19 @@ doctor() {
 EOT
         return 1
     fi
-    if locate_framework; then
-        printf '  ✓ 框架：%s\n' "$FRAMEWORK"
-    else
-        warn "没找到 rustomp 框架（只影响生成物漂移校验，不影响打包）"
-    fi
 }
 
 # 生成物漂移：仓库里存着 generated/*.rs，改过网表就必须重新生成
 check_generated() {
-    if ! locate_framework; then
-        warn "跳过生成物校验（没有框架；设 RUSTOMP_ROOT 后启用）"
+    # 显式跳过（不推荐）：没有框架时也能只打包，但生成物可能是旧的
+    if [ "${RUSTOMP_SKIP_DRIFT_CHECK:-0}" = "1" ]; then
+        warn "RUSTOMP_SKIP_DRIFT_CHECK=1：跳过生成物漂移校验（生成物可能已过期）"
         return 0
+    fi
+    if ! locate_framework; then
+        framework_hint
+        die "没有框架就无法校验生成物（这是防\"改了网表忘记重新生成\"的守卫）
+      确实只想打包、不要守卫（不推荐）：RUSTOMP_SKIP_DRIFT_CHECK=1 ./scripts/build.sh"
     fi
     say "校验生成物（rustomp-gen --check）"
     cargo run -q --release --manifest-path "${FRAMEWORK}/crates/rustomp-gen/Cargo.toml" -- "$ROOT" --check \
