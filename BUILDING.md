@@ -4,12 +4,21 @@
 
 | 依赖 | 版本 | 检查 | 装法 |
 |---|---|---|---|
-| Rust | ≥ 1.80（含两个 target） | `cargo --version` | https://rustup.rs |
+| Rust | stable，≥ 1.80 | `cargo --version` | https://rustup.rs |
 | rust target | `aarch64-apple-darwin` + `x86_64-apple-darwin` | `rustup target list --installed` | `rustup target add aarch64-apple-darwin x86_64-apple-darwin` |
 | Xcode 命令行工具 | — | `xcode-select -p` | `xcode-select --install` |
 | cmake | ≥ 3.20 | `cmake --version` | `brew install cmake` |
-| python3 | ≥ 3.11 | `python3 -V` | 系统自带或 `brew install python` |
-| 网络 | 首次需要 | — | 拉 rustomp / nih-plug / 打包用第三方源码 |
+| python3 | ≥ 3.11（要 `tomllib`） | `python3 -V` | 系统自带或 `brew install python` |
+| **cargo-nih-plug** | rev `de42101` | `cargo --list \| grep nih-plug` | `cargo install --git https://github.com/robbert-vdh/nih-plug.git --rev de42101 cargo-nih-plug --locked` |
+| 网络 | 首次需要 | — | 拉 rustomp 的 tag、nih-plug、打包用第三方源码；受限网络先 `source ~/vpn.env` |
+
+**三个仓的版本要配套**（都在各自仓库里显式声明了）：
+
+| 组件 | 版本写在哪 |
+|---|---|
+| 框架 `rustomp` | 本仓 `Cargo.toml` 的 `tag = "v0.1.0"` |
+| 打包工具 `rustomp-mac-plugin` | 本仓 `rustomp.toml` 的 `[requires] packer_tag = "v0.1.5"` |
+| `cargo-nih-plug` | 打包工具的 `deps.lock`（rev `de42101`） |
 
 **依赖约定：三个仓放在同一个目录（本仓的同级）。** 脚本会自动找到它们，不需要设任何环境变量。
 
@@ -57,7 +66,7 @@ cd sparklin-drive && ./scripts/build.sh
 
 | 格式 | 路径 |
 |---|---|
-| AU | `~/develop/rustomp-mac-plugin/build/au-<variant>/Sparklin Drive <Variant>.component` |
+| AU | `<同级目录>/rustomp-mac-plugin/build/au-<variant>/Sparklin Drive <Variant>.component` |
 | VST3 | `./target/bundled/Sparklin Drive <Variant>.vst3` |
 | CLAP | `./target/bundled/Sparklin Drive <Variant>.clap` |
 | 安装位置 | `~/Library/Audio/Plug-Ins/{Components,VST3,CLAP}/` |
@@ -71,6 +80,8 @@ cd sparklin-drive && ./scripts/build.sh
 
 ```bash
 cp .cargo/config.toml.example .cargo/config.toml     # 把 git 依赖 [patch] 到 ../rustomp
+#   前提：框架已经在本仓的同级目录（见"依赖约定"）
+#   想指到别处就改 .cargo/config.toml 里的 path
 ```
 
 `.cargo/config.toml` 已被 gitignore，不会误提交。
@@ -104,7 +115,9 @@ cargo run --release --manifest-path ../rustomp/crates/rustomp-gen/Cargo.toml -- 
 | `cannot specify features for packages outside of workspace` | 插件被放进了别的 Rust 项目的目录树里（`cargo-nih-plug` 会向上找最顶层 `Cargo.toml`）；把本仓放在独立目录 |
 | `生成物与 rustomp.toml 不一致` | 改了网表/参数却没重新生成 → 按上面第 2、3 步重跑 |
 | `error: failed to load manifest … rustomp-dsp` | 网络问题（首次要拉 rustomp 的 tag）；`source ~/vpn.env` 后重试 |
-| Logic 里看不到 / 显示旧名字 | `~/develop/rustomp-mac-plugin/scripts/reset-logic-cache.sh`（先退出 Logic） |
+| `no such command: nih-plug` | 没装 `cargo-nih-plug`（`doctor` 会给安装命令；注意 `--rev de42101`） |
+| `requires.packer = >=0.1（当前 …）` 报错 | 打包工具版本太旧 → `git -C ../rustomp-mac-plugin checkout <packer_tag>` |
+| Logic 里看不到 / 显示旧名字 | `../rustomp-mac-plugin/scripts/reset-logic-cache.sh`（先退出 Logic） |
 | 插件能扫到但没声音 | 确认用的是 **Mono** 或 **Stereo** 版本对应通道条；`check-au.sh` 会自检渲染 |
 | 构建很慢 | 首次要编 nih-plug + egui（~3-5 分钟）；之后增量 |
 
@@ -118,3 +131,15 @@ cargo run --release --manifest-path ../rustomp/crates/rustomp-gen/Cargo.toml -- 
 | Windows / Linux（VST3/CLAP） | 需要 `rustomp-win-plugin` / `rustomp-linux-plugin`（未开工，同一套契约） |
 | standalone | 未支持（打包工具 v0.2 计划） |
 | AAX | 不做（需要 Avid 授权） |
+
+---
+
+## 别人怎么验证过
+
+| 方式 | 说明 |
+|---|---|
+| **CI**（`.github/workflows/build.yml`） | 干净 macOS runner：三仓 checkout 到同一目录 → `doctor` → `test` → `build --no-install` → 抓 `ARTIFACT:` → 上传产物。**不设任何环境变量** |
+| **隔离验证** | 在 rustomp 仓：`./scripts/verify-isolation.sh`（全新目录、钉 tag、跑真实构建、检查依赖全来自 git） |
+| 本地一键 | `./scripts/build.sh doctor` 体检；`./scripts/build.sh test` 跑测试（不需要 ngspice） |
+
+CI 的产物与本机产物做过对拍：`au_smoke` 的 RMS 都是 **0.356170**（逐位一致）。

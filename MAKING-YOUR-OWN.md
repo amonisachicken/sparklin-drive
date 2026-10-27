@@ -14,11 +14,16 @@
 mkdir -p ~/projects && cd ~/projects
 git clone --depth 1 --branch v0.1.0 https://github.com/amonisachicken/rustomp.git
 git clone https://github.com/amonisachicken/rustomp-mac-plugin.git
+./rustomp-mac-plugin/scripts/fetch-third-party.sh      # 首次：clap-wrapper / CLAP / AudioUnitSDK（约 12 MB）
 git clone git@github.com:amonisachicken/sparklin-drive.git my-drive
-cd my-drive && ./scripts/build.sh     # 确认原样能出插件（约 3–5 分钟，首次要编 nih-plug + egui）
+cd my-drive
+
+./scripts/build.sh doctor             # 体检：缺什么、怎么装，一次说清
+./scripts/build.sh                    # 确认原样能出插件（约 3–5 分钟，首次要编 nih-plug + egui）
 ```
 
-> 缺依赖时 `./scripts/build.sh doctor` 会直接告诉你"在哪个目录、执行什么 git clone"。
+> 缺依赖时 `build.sh` 会直接告诉你"在哪个目录、敲什么命令"（克隆命令里的 tag 自动取自本仓
+> `Cargo.toml` / `rustomp.toml`，不会过期）。
 
 能跑通说明工具链、打包工具、框架都对。**先别改任何东西** —— 出问题时你才知道是"环境"还是"我的改动"。
 
@@ -48,6 +53,16 @@ subtype_stereo = "Md03"
 
 > ⚠️ **这些码发布后不可改**。宿主按 `(manufacturer, subtype)` 认插件；改了等于换了一个插件
 > —— 用户的自动化会话、Logic 的插入记录全部失效。**在第一次发布前就定好**。
+
+还有 `[requires]`（跨仓版本约束，`build.sh` / `pack.sh` 启动时校验）：
+
+```toml
+[requires]
+framework  = ">=0.1,<0.2"     # 你 fork 时用的框架版本范围
+packer     = ">=0.1"
+packer_tag = "v0.1.5"         # 本版用过的打包工具 tag（"缺依赖"提示里会引用它）
+designer   = ">=0.1"
+```
 
 同时改 cargo 包名（两处）：
 
@@ -132,6 +147,10 @@ cargo run --release --manifest-path ../rustomp/crates/rustomp-gen/Cargo.toml -- 
 - [ ] 美术素材的授权写清（自有作品建议显式注明许可）
 - [ ] `README.md` 里"这是什么 / 怎么装 / 已知限制"能看懂
 - [ ] 打 tag（`v0.1.0`）并把 CI 产物挂到 Release
+- [ ] **CI 改指向你自己的仓库**：`.github/workflows/build.yml` 里三处 `repository:` /
+      `path:` 是 amonisachicken 的仓；fork 后要么改成你的 fork，要么保留指向上游
+      （框架与打包工具本身不需要 fork，直接依赖上游 tag 即可）
+- [ ] `rustomp.toml` 的 `[requires]` 三个字段与实际用的 tag 对得上
 - [ ] 签名：目前打包工具只做 **ad-hoc 签名**；对外分发需要 Apple Developer ID + 公证
 
 ---
@@ -146,6 +165,8 @@ cargo run --release --manifest-path ../rustomp/crates/rustomp-gen/Cargo.toml -- 
 | 发布后才想改 AU subtype | 等于换插件：老工程全部失效 |
 | Logic 里看不到 / 显示旧名字 | `rustomp-mac-plugin/scripts/reset-logic-cache.sh`（先退出 Logic） |
 | 想要 standalone / Windows / Linux | 需要对应的打包工具仓（`rustomp-win-plugin` / `-linux-`），同一套 `ARTIFACT:` 契约 |
+| 三个仓版本不配套 | 框架 tag 在 `Cargo.toml`、打包工具 tag 在 `[requires] packer_tag`、`cargo-nih-plug` rev 在打包工具 `deps.lock` —— 三处要能对上 |
+| 忘了 `fetch-third-party.sh` | 首次构建前必须跑（约 12 MB）；否则 AUv2 的 CMake 会找不到 clap-wrapper |
 
 ---
 

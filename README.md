@@ -18,22 +18,72 @@
 
 ---
 
-## 快速开始（macOS）
+## 依赖与获取方式（先读这段）
+
+### 目录布局：三个仓放同一个目录
+
+```text
+some-dir/
+  rustomp/                 ← 框架（读 rustomp.toml / 校验生成物）
+  rustomp-mac-plugin/      ← 打包工具（AU/VST3/CLAP）
+  sparklin-drive/          ← 本仓（你在这里）
+```
+
+脚本按这个位置自动找依赖，**不需要设任何环境变量**。
+
+### 一次装齐
 
 ```bash
+mkdir -p ~/projects && cd ~/projects
+
+# 1) 框架（tag 见本仓 Cargo.toml 里 rustomp-dsp 的 tag = "..."）
+git clone --depth 1 --branch v0.1.0 https://github.com/amonisachicken/rustomp.git
+
+# 2) 打包工具（tag 见本仓 rustomp.toml 的 [requires] packer_tag）
+git clone https://github.com/amonisachicken/rustomp-mac-plugin.git
+git -C rustomp-mac-plugin checkout v0.1.5
+./rustomp-mac-plugin/scripts/fetch-third-party.sh        # 首次：clap-wrapper / CLAP / AudioUnitSDK（约 12 MB）
+
+# 3) 本仓
 git clone git@github.com:amonisachicken/sparklin-drive.git
-cd sparklin-drive
+```
+
+### 系统依赖
+
+| 依赖 | 为什么需要 | 检查 | 装法 |
+|---|---|---|---|
+| Rust（stable） | 编译插件 | `cargo --version` | https://rustup.rs |
+| 两个 rust target | universal 二进制（Intel + Apple Silicon） | `rustup target list --installed` | `rustup target add aarch64-apple-darwin x86_64-apple-darwin` |
+| Xcode 命令行工具 | 链接系统框架、`codesign`、`plutil` | `xcode-select -p` | `xcode-select --install` |
+| cmake ≥ 3.20 | 把 CLAP 包成 AUv2（clap-wrapper） | `cmake --version` | `brew install cmake` |
+| python3 ≥ 3.11 | 读 `rustomp.toml`（`tomllib`） | `python3 -V` | 系统自带，或 `brew install python` |
+| **cargo-nih-plug** | `cargo nih-plug` 子命令（打 bundle） | `cargo --list \| grep nih-plug` | `cargo install --git https://github.com/robbert-vdh/nih-plug.git --rev de42101 cargo-nih-plug --locked` |
+| 网络（首次） | 拉 rustomp / nih-plug / 第三方源码 | — | 国内网络可能要先 `source ~/vpn.env` |
+
+> `cargo-nih-plug` 的 `--rev` 必须与打包工具的 `deps.lock` 一致（当前 `de42101`），否则 bundler 行为可能不同。
+
+### 自查
+
+```bash
+./scripts/build.sh doctor      # 缺什么、怎么装，一次说清（含克隆命令与正确的 tag）
+```
+
+---
+
+## 快速开始（macOS）
+
+依赖齐了之后，一条命令：
+
+```bash
+cd ~/projects/sparklin-drive
 ./scripts/build.sh
 ```
 
 `build.sh` 会：体检 → 校验生成物没漂移 → 调打包工具 → 安装到 `~/Library/Audio/Plug-Ins/` → 打印 `ARTIFACT:` 列表。
 装完在 Logic / 任何 AU·VST3·CLAP 宿主里就能看到 **Sparklin Drive Mono** 与 **Sparklin Drive Stereo**（两个独立身份）。
 
-> 第一次跑之前需要：Rust + Xcode 命令行工具 + cmake，以及**放在本仓同级目录**的
-> [rustomp](https://github.com/amonisachicken/rustomp)（框架）与
-> [rustomp-mac-plugin](https://github.com/amonisachicken/rustomp-mac-plugin)（打包工具）。
-> 缺什么 `./scripts/build.sh doctor` 会直接打印克隆命令（含正确的 tag）。
-> 详细步骤与故障排查见 **[BUILDING.md](BUILDING.md)**。
+> 缺依赖时它不会让你猜 —— 直接打印"在哪个目录、敲什么命令"。
+> 详细步骤、产物路径与故障排查见 **[BUILDING.md](BUILDING.md)**。
 
 ```bash
 ./scripts/build.sh doctor     # 只体检
@@ -71,7 +121,8 @@ plugin/
   src/generated/*.rs     身份 / 参数表 / Plugin 实现 / 面板声明 / 参数桥 / 素材字节
 assets/                  面板底图 + 控件贴图（设计器导出，12 px/mm）
 design/panel.box.json    设计器源文件（可回设计器继续改）
-scripts/build.sh         一键构建入口
+scripts/build.sh         一键构建入口（doctor / build / test / verify）
+BUILDING.md              依赖清单、分步安装、产物位置、故障排查
 MAKING-YOUR-OWN.md       拿它当模板：改身份/电路/面板的四步清单
 ```
 
