@@ -1,0 +1,31 @@
+# SPDX-License-Identifier: GPL-3.0-or-later
+[package]
+name = "sparklin-drive"
+description = "Sparklin Drive —— rustomp 插件（HONEYPIE EFFECTS）"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+authors.workspace = true
+repository.workspace = true
+publish = false
+
+[lib]
+name = "sparklin_drive"
+crate-type = ["cdylib", "lib"]
+
+[dependencies]
+rustomp-dsp = { workspace = true }
+sparklin-drive-circuit = { path = "../circuit" }
+
+nih_plug = { git = "https://github.com/robbert-vdh/nih-plug.git", rev = "de42101" }
+nih_plug_egui = { git = "https://github.com/robbert-vdh/nih-plug.git", rev = "de42101" }
+rustomp-gui = { workspace = true }
+
+[features]
+# 默认带界面（无界面构建用 --no-default-features）
+default = ["gui"]
+mono = []
+stereo = []
+# 有界面时打开（手写的 src/editor.rs 会被 plugin_impl.rs 的钩子调用）
+gui = []
+assert_process_allocs = ["nih_plug/assert_process_allocs"]

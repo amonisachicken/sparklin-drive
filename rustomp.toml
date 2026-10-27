@@ -1,0 +1,147 @@
+# Sparklin Drive —— 插件项目描述（由 rustomp 模板生成，请逐项填写）
+#
+# 框架只读这个文件，**不含任何插件专属信息**。
+
+[plugin]
+# cargo 包名（决定 bundler.toml 的键），建议小写短横线
+package = "sparklin-drive"
+name = "Sparklin Drive"
+vendor = "HONEYPIE EFFECTS"
+url = "https://github.com/amonisachicken/rustomp"
+email = ""
+# CLAP id（会按变体追加 .mono / .stereo）
+clap_id = "com.honeypieeffects.sparklin_drive"
+# VST3 class id：每套恰好 16 字节，发布后不可改
+vst3_class_id = "SpXXXXXXXXXXXV01"
+vst3_class_id_mono = "SpXXXXXXXXXXXM01"
+vst3_class_id_stereo = "SpXXXXXXXXXXXS01"
+
+[au]
+# AU 四字符码：发布后不可改
+manufacturer_code = "HpEf"
+manufacturer_name = "HONEYPIE EFFECTS"
+bundle_id = "com.honeypieeffects.sparklin_drive"
+subtype_dual = "Sp01"
+subtype_mono = "Sp02"
+subtype_stereo = "Sp03"
+
+[build]
+variants = ["mono", "stereo"]
+dual_variant = false
+# 这一阶段生成的是**无界面**插件。做界面时：设 gui = true，
+# 并在 plugin/src/editor.rs 里实现 `make(params, activity)`（S1d）。
+gui = true
+
+[circuit]
+# 分支类型（circuit/src/lib.rs 里 type Branch = rustomp_dsp::Branch<asym::Ckt, sym::Ckt>）
+plugin_type = "Branch"
+params_type = "Params"
+# 参数不是平坦结构体 → 用构造函数装配（按 [[params]] 声明顺序传位置参数）
+params_builder = "make_params"
+
+[[params]]
+id = "gain"
+name = "Gain"
+type = "float"
+default = 0.5
+range = [0.0, 1.0]
+format = "percent"
+circuit = "gain"
+
+[[params]]
+id = "symmetric"
+name = "Clip Mode"
+type = "bool"
+default = false
+
+[[params]]
+id = "level"
+name = "Level"
+type = "float"
+default = 0.5
+range = [0.0, 1.0]
+format = "percent"
+circuit = "level"
+
+[[params]]
+id = "bypass"
+name = "Bypass"
+type = "bool"
+default = false
+
+# >>> rustomp-box-designer（自动生成，勿手改；改请回设计器）
+# >>> rustomp-box-designer（自动生成，勿手改；改请回设计器）
+# >>> rustomp-box-designer（自动生成，勿手改；改请回设计器）
+# >>> rustomp-box-designer（自动生成，勿手改；改请回设计器）
+# >>> rustomp-box-designer（自动生成，勿手改；改请回设计器）
+# >>> rustomp-box-designer（自动生成，勿手改；改请回设计器）
+[assets]
+panel = "assets/panel.png"
+knob_round_dark = "assets/knob_round_dark.png"
+3pdt_alt_hold = "assets/3pdt_alt_hold.png"
+toggle_small_up = "assets/toggle_small_up.png"
+toggle_small_down = "assets/toggle_small_down.png"
+
+[ui]
+# 素材坐标 = 毫米（1 单位 = 1 mm）；面板 60 x 112 mm，导出 12 px/mm
+svg_width = 60
+svg_height = 112
+window_width = 360
+window_height = 672
+background = "#faf1e0"
+
+[[ui.knobs]]
+id = "k1"
+param = "level"
+center = [15.32, 24]
+radius = 9.999
+asset = "knob_round_dark"
+image_size = [19.999, 19.999]
+render = "rotate"
+travel_deg = 270
+drag_full_range_px = 260
+
+[[ui.knobs]]
+id = "k2"
+param = "gain"
+center = [44.64, 23.59]
+radius = 9.999
+asset = "knob_round_dark"
+image_size = [19.999, 19.999]
+render = "rotate"
+travel_deg = 270
+drag_full_range_px = 260
+
+[[ui.leds]]
+param = "clip_indicator"
+center = [30, 11.94]
+radius = 2.247
+off_color = "#800000"
+on_color = "#ff0000"
+
+[[ui.toggles]]
+param = "symmetric"
+image_up = "toggle_small_up"
+image_down = "toggle_small_down"
+x = 25.93
+y_up = 38.26
+y_down = 38.8
+width = 8.35
+height = 8.89
+pivot = [30.11, 42.98]
+press_scale = 0.9
+
+[[ui.buttons]]
+param = "bypass"
+center = [30.1, 83.3]
+radius = 7.175
+press_scale = 0.9
+image_hold = "3pdt_alt_hold"
+image_size = [14.35, 14.35]
+# <<< rustomp-box-designer
+
+# 跨仓版本约束（rustomp/docs/ecosystem.md §3）：rustomp-gen 与 packer 启动时各校验一次
+[requires]
+framework = ">=0.1,<0.2"
+packer = ">=0.1"
+designer = ">=0.1"

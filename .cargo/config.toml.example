@@ -1,0 +1,11 @@
+# 本地开发覆盖 —— **复制成 .cargo/config.toml 后生效**（config.toml 本身不入库）
+#
+#   cp .cargo/config.toml.example .cargo/config.toml
+#   （路径按你的目录结构调整）
+#
+# Cargo 1.56+ 支持在 config 里写 [patch]：把 git 依赖重定向到本地目录，
+# 这样改 rustomp 的代码不用先 commit+push+改 tag。
+[patch."https://github.com/amonisachicken/rustomp"]
+rustomp-dsp    = { path = "../rustomp/crates/rustomp-dsp" }
+rustomp-gui    = { path = "../rustomp/crates/rustomp-gui" }
+rustomp-oracle = { path = "../rustomp/crates/rustomp-oracle" }

@@ -1,0 +1,19 @@
+# Rust
+target/
+
+# 打包产物
+/bundled/
+/build/
+/dist/
+*.clap/
+*.vst3/
+*.component/
+*.aaxplugin/
+# 打包工具生成的（cargo-nih-plug 从插件项目根读）
+/bundler.toml
+
+# 本地开发覆盖（把 git 依赖重定向到本地 rustomp）：见 .cargo/config.toml.example
+/.cargo/config.toml
+
+# 系统
+.DS_Store

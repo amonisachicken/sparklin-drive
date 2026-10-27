@@ -1,0 +1,204 @@
+{
+  "version": 1,
+  "name": "Sparklin Drive",
+  "canvas": {
+    "preset": "1590B",
+    "outer_mm": [
+      112,
+      60
+    ],
+    "canvas_mm": [
+      60,
+      112
+    ],
+    "px_per_mm": 12,
+    "window_px": [
+      360,
+      672
+    ],
+    "background": "#faf1e0",
+    "ink": "#231815"
+  },
+  "params": [
+    {
+      "id": "gain",
+      "name": "Gain",
+      "type": "float",
+      "default": "0.5"
+    },
+    {
+      "id": "level",
+      "name": "Level",
+      "type": "float",
+      "default": "0.5"
+    },
+    {
+      "id": "symmetric",
+      "name": "Clip Mode",
+      "type": "bool",
+      "default": "false"
+    },
+    {
+      "id": "bypass",
+      "name": "Bypass",
+      "type": "bool",
+      "default": "false"
+    }
+  ],
+  "elements": [
+    {
+      "id": "f1",
+      "kind": "frame",
+      "layer": "artwork",
+      "margin": 1.2,
+      "rx": 2.2,
+      "strokeWidth": 0.35,
+      "stroke": "#231815"
+    },
+    {
+      "id": "i1",
+      "kind": "image",
+      "asset": "label_level",
+      "x": 10.58,
+      "y": 35.3,
+      "rot": 0,
+      "layer": "silkscreen",
+      "size": [
+        9.48,
+        2.37
+      ]
+    },
+    {
+      "id": "i2",
+      "kind": "image",
+      "asset": "label_gain",
+      "x": 40.76,
+      "y": 35.3,
+      "rot": 0,
+      "layer": "silkscreen",
+      "size": [
+        7.77,
+        2.37
+      ]
+    },
+    {
+      "id": "i3",
+      "kind": "image",
+      "asset": "label_clip",
+      "x": 26.14,
+      "y": 35.3,
+      "rot": 0,
+      "layer": "silkscreen",
+      "size": [
+        7.73,
+        2.37
+      ]
+    },
+    {
+      "id": "i4",
+      "kind": "image",
+      "asset": "label_volume",
+      "x": 24.2,
+      "y": 96.2,
+      "rot": 0,
+      "layer": "silkscreen",
+      "size": [
+        11.62,
+        2.37
+      ]
+    },
+    {
+      "id": "l1",
+      "kind": "led",
+      "asset": "led_red",
+      "param": "clip_indicator",
+      "center": [
+        30,
+        11.94
+      ],
+      "radius": 2.249,
+      "off_color": "#800000",
+      "on_color": "#ff0000",
+      "lit": false
+    },
+    {
+      "id": "b1",
+      "kind": "button",
+      "asset": "3pdt_alt",
+      "param": "bypass",
+      "center": [
+        30.1,
+        83.3
+      ],
+      "radius": 7.2,
+      "press_scale": 0.9,
+      "pressed": false,
+      "image_hold": "3pdt_alt_hold",
+      "image_size": [
+        14.35,
+        14.35
+      ]
+    },
+    {
+      "id": "k1",
+      "kind": "knob",
+      "asset": "knob_round_dark",
+      "param": "level",
+      "center": [
+        15.32,
+        24.0
+      ],
+      "image_size": [
+        19.999,
+        19.999
+      ],
+      "travel_deg": 270,
+      "drag_full_range_px": 260,
+      "value": 0.5
+    },
+    {
+      "id": "k2",
+      "kind": "knob",
+      "asset": "knob_round_dark",
+      "param": "gain",
+      "center": [
+        44.64,
+        23.59
+      ],
+      "image_size": [
+        19.999,
+        19.999
+      ],
+      "travel_deg": 270,
+      "drag_full_range_px": 260,
+      "value": 0.5
+    },
+    {
+      "id": "t1",
+      "kind": "toggle",
+      "param": "symmetric",
+      "image_up": "toggle_small_up",
+      "image_down": "toggle_small_down",
+      "x": 25.93,
+      "y_up": 38.26,
+      "y_down": 38.8,
+      "width": 8.35,
+      "height": 8.89,
+      "pivot": [
+        30.11,
+        42.98
+      ],
+      "press_scale": 0.9,
+      "state": false
+    }
+  ],
+  "nextId": 20,
+  "view": {
+    "safe_margin_mm": 4,
+    "snap_mm": 0.5,
+    "snap_to_targets": true,
+    "show_safe": true
+  },
+  "layers": {},
+  "imported": []
+}

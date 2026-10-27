@@ -1,0 +1,81 @@
+name: build
+
+# 干净机器上验证「clone → 一条命令 → 出插件」。
+# 三个仓各 checkout 到独立目录，然后跑 ./scripts/build.sh。
+on:
+  push:
+    branches: [master]
+  pull_request:
+  workflow_dispatch:
+
+jobs:
+  macos:
+    runs-on: macos-14            # arm64 机器；universal 需要两个 target
+    env:
+      RUSTOMP_TAG: v0.1.0
+      PACKER_TAG: master          # 打包工具稳定后改成 tag
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          path: sparklin-drive
+
+      - name: Checkout framework (rustomp)
+        uses: actions/checkout@v4
+        with:
+          repository: amonisachicken/rustomp
+          ref: ${{ env.RUSTOMP_TAG }}
+          path: rustomp
+
+      - name: Checkout packer (rustomp-mac-plugin)
+        uses: actions/checkout@v4
+        with:
+          repository: amonisachicken/rustomp-mac-plugin
+          ref: ${{ env.PACKER_TAG }}
+          path: rustomp-mac-plugin
+
+      - uses: dtolnay/rust-toolchain@stable
+        with:
+          targets: aarch64-apple-darwin,x86_64-apple-darwin
+
+      - uses: Swatinem/rust-cache@v2
+        with:
+          workspaces: sparklin-drive
+
+      - name: cmake
+        run: brew install cmake
+
+      - name: Fetch packer third-party sources
+        working-directory: rustomp-mac-plugin
+        run: ./scripts/fetch-third-party.sh
+
+      - name: Doctor
+        working-directory: sparklin-drive
+        env:
+          RUSTOMP_MAC_PLUGIN: ${{ github.workspace }}/rustomp-mac-plugin
+          RUSTOMP_ROOT: ${{ github.workspace }}/rustomp
+        run: ./scripts/build.sh doctor
+
+      - name: Test
+        working-directory: sparklin-drive
+        run: ./scripts/build.sh test
+
+      - name: Build (AU/VST3/CLAP, no install)
+        working-directory: sparklin-drive
+        env:
+          RUSTOMP_MAC_PLUGIN: ${{ github.workspace }}/rustomp-mac-plugin
+          RUSTOMP_ROOT: ${{ github.workspace }}/rustomp
+        run: ./scripts/build.sh --no-install | tee /tmp/build.log
+
+      - name: Collect artifacts
+        working-directory: sparklin-drive
+        run: |
+          mkdir -p dist
+          grep '^ARTIFACT: ' /tmp/build.log | sed 's/^ARTIFACT: //' | while read -r p; do
+            cp -R "$p" dist/ || true
+          done
+          ls -la dist
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: sparklin-drive-macos
+          path: sparklin-drive/dist

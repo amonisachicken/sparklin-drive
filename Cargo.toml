@@ -1,0 +1,39 @@
+# SPDX-License-Identifier: GPL-3.0-or-later
+#
+# 插件项目自己的 workspace。
+#
+# 为什么需要它：插件**不是** rustomp 的 workspace 成员（rustomp 的 exclude 里有 plugins/），
+# 这样 rustomp 可以"clone 下来直接 cargo test"，而插件项目可以放在任何目录。
+#
+# 拆仓之后（docs/split-plan.md §2），这个文件会搬到独立仓库的根目录，
+# 只需把下面的 path 依赖换成 `git = "...", tag = "v0.1.0"`。
+[workspace]
+resolver = "2"
+members = ["plugin", "circuit"]
+
+[workspace.package]
+version = "0.1.0"
+edition = "2021"
+license = "GPL-3.0-or-later"
+authors = ["amonisachicken"]
+repository = "https://github.com/amonisachicken/rustomp"
+
+# 框架依赖钉在 tag 上（可复现）。**开发期**想用本地 rustomp 的话，
+# 在 .cargo/config.toml 里用 [patch] 覆盖（见 .cargo/config.toml.example），不要改这里。
+[workspace.dependencies]
+rustomp-dsp    = { git = "https://github.com/amonisachicken/rustomp", tag = "v0.1.0" }
+rustomp-gui    = { git = "https://github.com/amonisachicken/rustomp", tag = "v0.1.0" }
+rustomp-oracle = { git = "https://github.com/amonisachicken/rustomp", tag = "v0.1.0" }
+
+# profile 必须写在 workspace 根（原来住在 rustomp 的根 Cargo.toml 里）
+[profile.release]
+opt-level = 3
+lto = "thin"
+codegen-units = 1
+# 注意：**不要**设 panic = "abort"。插件里 panic → 宿主收到 abort = Logic 直接闪退。
+strip = "symbols"
+
+[profile.release-debug]
+inherits = "release"
+debug = true
+strip = "none"

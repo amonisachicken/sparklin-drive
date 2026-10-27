@@ -1,0 +1,4 @@
+# 由 scripts/gen-bundler-toml.sh 从 /Users/haidai/develop/sparklin-drive/rustomp.toml 生成，请勿手改。
+
+["sparklin-drive"]
+name = "Sparklin Drive"
