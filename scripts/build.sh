@@ -88,16 +88,19 @@ doctor() {
         PLUGIN_DIR="$ROOT" "${PACKER}/pack.sh" --help >/dev/null 2>&1 || true
         "${PACKER}/scripts/doctor.sh" || die "打包工具体检未通过"
     else
-        cat >&2 <<EOT
+        _parent="$(dirname "$ROOT")"
+    _ptag="$(grep -oE 'packer_tag = "v[0-9.]+"' rustomp.toml 2>/dev/null | head -1 | sed 's/.*"v/v/; s/"$//')"
+    cat >&2 <<EOT
   ✗ 找不到打包工具（${PACKER}/pack.sh）
 
-  按约定，它和框架一起放在**本仓的同级目录**：
+  按约定，它和框架一起放在**本仓的同级目录**。依次执行：
 
-    cd "$(dirname "$ROOT")" && git clone https://github.com/amonisachicken/rustomp-mac-plugin.git
-    ./rustomp-mac-plugin/scripts/fetch-third-party.sh      # 首次：拉 clap-wrapper 等（约 12 MB）
+    cd "${_parent}"
+    git clone https://github.com/amonisachicken/rustomp-mac-plugin.git
+    ${_ptag:+git -C rustomp-mac-plugin checkout ${_ptag}      # 钉到本版用过的 tag}
+    ./rustomp-mac-plugin/scripts/fetch-third-party.sh        # 首次：拉 clap-wrapper 等（约 12 MB）
 
-  然后重跑 ./scripts/build.sh，不需要设环境变量。
-  （钉版本：git -C ./rustomp-mac-plugin checkout v0.1.4）
+  然后重跑 ./scripts/build.sh，不需要设任何环境变量。
 
   仓库：https://github.com/amonisachicken/rustomp-mac-plugin
 EOT
