@@ -3,8 +3,9 @@
 一款**电路级建模**的电吉他过载效果器插件（AU / VST3 / CLAP），用
 [rustomp](https://github.com/amonisachicken/rustomp) 框架从**真实的模拟电路**算出来的音色。
 
-> 这是"用 rustomp 做插件"的**参考实现**：电路网表、生成代码、面板产物、构建脚本全在仓库里，
-> 换掉 `circuit/netlist/*.cir` 与面板就是另一台机器。也可以直接当模板用。
+> 这是"用 rustomp 做插件"的**参考实现**：电路网表、生成代码、面板产物、构建脚本全在仓库里。
+> **它同时是模板** —— 想做一个自己的插件，看 **[MAKING-YOUR-OWN.md](MAKING-YOUR-OWN.md)**
+> （改身份 / 电路 / 面板 / 参数表，四步 + 发布清单 + 6 条易踩的坑）。
 
 ```text
      电路（SPICE 网表）                面板（设计器导出）              插件
@@ -70,6 +71,7 @@ plugin/
 assets/                  面板底图 + 控件贴图（设计器导出，12 px/mm）
 design/panel.box.json    设计器源文件（可回设计器继续改）
 scripts/build.sh         一键构建入口
+MAKING-YOUR-OWN.md       拿它当模板：改身份/电路/面板的四步清单
 ```
 
 ---
@@ -79,6 +81,18 @@ scripts/build.sh         一键构建入口
 面板由 [rustomp-box-designer](https://github.com/amonisachicken/rustomp-box-designer) 画，
 导出 `ui.toml` 的标记块 + 素材 PNG；本仓的 `assets/` 与 `rustomp.toml` 的 `[assets]/[ui]` 就是它的产物。
 想改面板：打开 `design/panel.box.json` → 改 → 导出素材包 → 覆盖 `assets/`、替换 `[ui]` 段 → `./scripts/build.sh`。
+
+---
+
+## 用它做你自己的插件
+
+```bash
+git clone git@github.com:amonisachicken/sparklin-drive.git my-drive
+cd my-drive && ./scripts/build.sh          # 先确认原样能跑通
+```
+
+然后按 **[MAKING-YOUR-OWN.md](MAKING-YOUR-OWN.md)** 改：身份（`rustomp.toml`）→ 电路（网表）→
+面板（设计器导出）→ 参数表。里面有发布前检查清单，以及"AU 码发布后不可改"这类容易吃亏的地方。
 
 ---
 

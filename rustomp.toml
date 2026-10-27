@@ -7,7 +7,7 @@
 package = "sparklin-drive"
 name = "Sparklin Drive"
 vendor = "HONEYPIE EFFECTS"
-url = "https://github.com/amonisachicken/rustomp"
+url = "https://github.com/amonisachicken/sparklin-drive"
 email = ""
 # CLAP id（会按变体追加 .mono / .stereo）
 clap_id = "com.honeypieeffects.sparklin_drive"

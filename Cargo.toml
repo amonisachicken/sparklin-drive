@@ -16,7 +16,7 @@ version = "0.1.0"
 edition = "2021"
 license = "GPL-3.0-or-later"
 authors = ["amonisachicken"]
-repository = "https://github.com/amonisachicken/rustomp"
+repository = "https://github.com/amonisachicken/sparklin-drive"
 
 # 框架依赖钉在 tag 上（可复现）。**开发期**想用本地 rustomp 的话，
 # 在 .cargo/config.toml 里用 [patch] 覆盖（见 .cargo/config.toml.example），不要改这里。
