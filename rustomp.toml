@@ -145,5 +145,5 @@ image_size = [14.35, 14.35]
 framework = ">=0.1,<0.2"
 packer = ">=0.1"
 # 本版插件用过的打包工具 tag（build.sh 的"缺依赖"提示会引用它，方便钉版本）
-packer_tag = "v0.1.5"
+packer_tag = "v0.1.6"
 designer = ">=0.1"
