@@ -1,5 +1,8 @@
 <p align="center">
-  <img src="pictures/sparklin_drive_logo.png" alt="Sparklin Drive" width="420">
+  <picture>
+    <source media="(prefers-color-scheme: dark)" srcset="pictures/sparklin_drive_logo_reverse.png">
+    <img src="pictures/sparklin_drive_logo.png" alt="Sparklin Drive" width="420">
+  </picture>
 </p>
 
 # Sparklin Drive
