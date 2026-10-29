@@ -7,6 +7,11 @@ on:
   push:
     tags: ["v*"]
   workflow_dispatch:
+    inputs:
+      publish_tag:
+        description: "已有 tag（如 v0.1.9）：构建并发布到该 tag；留空 = 只构建当前 ref，不发布"
+        required: false
+        default: ""
 
 permissions:
   contents: write
@@ -24,6 +29,7 @@ jobs:
     steps:
       - uses: actions/checkout@v4
         with:
+          ref: ${{ github.event.inputs.publish_tag || github.ref }}
           path: sparklin-drive
       - uses: actions/checkout@v4
         with:
@@ -86,6 +92,7 @@ jobs:
     steps:
       - uses: actions/checkout@v4
         with:
+          ref: ${{ github.event.inputs.publish_tag || github.ref }}
           path: sparklin-drive
       - uses: actions/checkout@v4
         with:
@@ -165,6 +172,7 @@ jobs:
     steps:
       - uses: actions/checkout@v4
         with:
+          ref: ${{ github.event.inputs.publish_tag || github.ref }}
           path: sparklin-drive
       - uses: actions/checkout@v4
         with:
@@ -228,8 +236,8 @@ jobs:
           if-no-files-found: error
 
   publish:
-    # 只有推 tag 才创建 Release；workflow_dispatch 只跑到上面三个构建 job（便于试跑）
-    if: github.event_name == 'push' && startsWith(github.ref, 'refs/tags/v')
+    # 推 tag 自动发布；workflow_dispatch 传 publish_tag 时可对已有 tag 补发
+    if: (github.event_name == 'push' && startsWith(github.ref, 'refs/tags/v')) || (github.event_name == 'workflow_dispatch' && github.event.inputs.publish_tag != '')
     needs: [macos, windows, linux]
     runs-on: ubuntu-latest
     steps:
@@ -239,9 +247,10 @@ jobs:
       - name: Assemble release assets
         env:
           GH_TOKEN: ${{ github.token }}
+          TAG: ${{ github.event.inputs.publish_tag || github.ref_name }}
         run: |
           set -euo pipefail
-          VERSION="${GITHUB_REF_NAME#v}"
+          VERSION="${TAG#v}"
           mkdir -p release
           cp artifacts/macos/*.dmg  "release/Sparklin-Drive-${VERSION}-macOS.dmg"
           cp artifacts/macos/*.zip  "release/Sparklin-Drive-${VERSION}-macOS-plugins.zip"
@@ -266,10 +275,10 @@ jobs:
           - 验证：clap-probe（声道/端口）+ pluginval strictness 5；**未在真实 DAW 中人工验收**
           - 校验和见 SHA256SUMS.txt
           EOF
-          if gh release view "$GITHUB_REF_NAME" >/dev/null 2>&1; then
-            gh release upload "$GITHUB_REF_NAME" release/* --clobber
+          if gh release view "$TAG" -R "$GITHUB_REPOSITORY" >/dev/null 2>&1; then
+            gh release upload "$TAG" release/* --clobber -R "$GITHUB_REPOSITORY"
           else
-            gh release create "$GITHUB_REF_NAME" release/* \
+            gh release create "$TAG" release/* -R "$GITHUB_REPOSITORY" \
               --title "Sparklin Drive v${VERSION}（技术预览 / 未签名）" \
               --notes-file release-notes.md \
               --prerelease
