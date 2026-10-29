@@ -258,9 +258,9 @@ jobs:
 
           | 平台 | 文件 | 安装 |
           |---|---|---|
-          | macOS（universal） | DMG / plugins.zip | 双击 DMG 里的 `安装.command`，或拖到 ~/Library/Audio/Plug-Ins/ |
+          | macOS（universal） | DMG / plugins.zip | 双击 DMG 里的「安装.command」，或拖到 ~/Library/Audio/Plug-Ins/ |
           | Windows x64 | MSI ×2 / plugins.zip | MSI：用户级免 UAC、系统级需管理员；只装一种 |
-          | Linux x64 | tar.gz | 解包后 `./install.sh`（用户级）或 `sudo ./install.sh --system` |
+          | Linux x64 | tar.gz | 解包后运行 ./install.sh（用户级），或 sudo ./install.sh --system（系统级） |
 
           - Linux 分发包基线：Ubuntu 22.04（glibc 2.35）
           - 验证：clap-probe（声道/端口）+ pluginval strictness 5；**未在真实 DAW 中人工验收**
