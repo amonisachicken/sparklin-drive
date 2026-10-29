@@ -20,35 +20,48 @@
 
 ## 依赖与获取方式（先读这段）
 
-### 目录布局：三个仓放同一个目录
+### 目录布局：框架 + 本平台打包工具 + 本仓
 
 ```text
 some-dir/
-  rustomp/                 ← 框架（读 rustomp.toml / 校验生成物）
-  rustomp-mac-plugin/      ← 打包工具（AU/VST3/CLAP）
-  sparklin-drive/          ← 本仓（你在这里）
+  rustomp/                    ← 框架（读 rustomp.toml / 校验生成物）
+  rustomp-mac-plugin/         ← macOS：AU/VST3/CLAP + DMG
+  rustomp-win-plugin/         ← Windows：VST3/CLAP + MSI
+  rustomp-linux-plugin/       ← Linux：VST3/CLAP + tar.gz
+  sparklin-drive/             ← 本仓（你在这里）
 ```
 
-脚本按这个位置自动找依赖，**不需要设任何环境变量**。
+按平台放一个打包工具即可（都放也行）；`scripts/build.sh` 会按 `uname` 自动选。
+脚本按这个位置找依赖，**不需要设任何环境变量**。
 
 ### 一次装齐
 
 ```bash
 mkdir -p ~/projects && cd ~/projects
 
-# 1) 框架（tag 见本仓 Cargo.toml 里 rustomp-dsp 的 tag = "..."）
-git clone --depth 1 --branch v0.1.0 https://github.com/amonisachicken/rustomp.git
+# 框架（tag 见本仓 Cargo.toml 里 rustomp-dsp 的 tag = "..."）
+git clone --depth 1 --branch v0.1.2 https://github.com/amonisachicken/rustomp.git
 
-# 2) 打包工具（tag 见本仓 rustomp.toml 的 [requires] packer_tag）
-git clone https://github.com/amonisachicken/rustomp-mac-plugin.git
-git -C rustomp-mac-plugin checkout v0.1.5
-./rustomp-mac-plugin/scripts/fetch-third-party.sh        # 首次：clap-wrapper / CLAP / AudioUnitSDK（约 12 MB）
+# 打包工具（按平台取一个；tag 见各仓 Releases）
+git clone -b v0.1.7 https://github.com/amonisachicken/rustomp-mac-plugin.git     # macOS
+git clone -b v0.3.0 https://github.com/amonisachicken/rustomp-win-plugin.git     # Windows
+git clone -b v0.1.0 https://github.com/amonisachicken/rustomp-linux-plugin.git   # Linux
 
-# 3) 本仓
-git clone git@github.com:amonisachicken/sparklin-drive.git
+# 本仓
+git clone https://github.com/amonisachicken/sparklin-drive.git
+```
+
+首次还要拉打包工具的第三方依赖：
+
+```bash
+./rustomp-mac-plugin/scripts/fetch-third-party.sh          # macOS
+./rustomp-win-plugin/scripts/fetch-third-party.sh --all    # Windows
+./rustomp-linux-plugin/scripts/fetch-third-party.sh --all  # Linux
 ```
 
 ### 系统依赖
+
+**macOS**
 
 | 依赖 | 为什么需要 | 检查 | 装法 |
 |---|---|---|---|
@@ -57,10 +70,27 @@ git clone git@github.com:amonisachicken/sparklin-drive.git
 | Xcode 命令行工具 | 链接系统框架、`codesign`、`plutil` | `xcode-select -p` | `xcode-select --install` |
 | cmake ≥ 3.20 | 把 CLAP 包成 AUv2（clap-wrapper） | `cmake --version` | `brew install cmake` |
 | python3 ≥ 3.11 | 读 `rustomp.toml`（`tomllib`） | `python3 -V` | 系统自带，或 `brew install python` |
-| **cargo-nih-plug** | `cargo nih-plug` 子命令（打 bundle） | `cargo --list \| grep nih-plug` | `cargo install --git https://github.com/robbert-vdh/nih-plug.git --rev de42101 cargo-nih-plug --locked` |
-| 网络（首次） | 拉 rustomp / nih-plug / 第三方源码 | — | 国内网络可能要先 `source ~/vpn.env` |
 
-> `cargo-nih-plug` 的 `--rev` 必须与打包工具的 `deps.lock` 一致（当前 `de42101`），否则 bundler 行为可能不同。
+**Windows / Linux**：见各自打包工具的 README（Windows 需要 MSVC 工具链 + Python ≥3.11；
+Linux 需要 g++、Python ≥3.11、X11 开发库）。两个平台都不需要 cmake。
+
+**三平台都要**：`cargo-nih-plug`（`cargo install --git https://github.com/robbert-vdh/nih-plug.git
+--rev de42101 cargo-nih-plug --locked`；rev 必须与打包工具的 `deps.lock` 一致）。
+
+> 网络受限时先 `source ~/vpn.env`；打包工具也支持 `RUSTOMP_GIT_SSH=1` 把 https 重写成 SSH。
+
+### 预编译包（技术预览）
+
+不想自己编译可以直接下 **[Releases](https://github.com/amonisachicken/sparklin-drive/releases)**：
+
+| 平台 | 资产 | 说明 |
+|---|---|---|
+| macOS | `.dmg` / `-macOS-plugins.zip` | universal；DMG 里双击 `安装.command` |
+| Windows x64 | MSI（system / per-user）/ zip | 用户级免 UAC；系统级需管理员；**只装一种** |
+| Linux x64 | `.tar.gz` | `install.sh`（用户级）或 `sudo ./install.sh --system` |
+
+> **未签名**：macOS 可能被 Gatekeeper 拦、Windows 可能弹 SmartScreen；仅供测试。
+> 正式分发需要 Developer ID/公证与 Authenticode。
 
 ### 自查
 
@@ -70,26 +100,34 @@ git clone git@github.com:amonisachicken/sparklin-drive.git
 
 ---
 
-## 快速开始（macOS）
+## 快速开始（三平台）
 
-依赖齐了之后，一条命令：
+依赖齐了之后，一条命令（`build.sh` 自动选本平台的打包工具）：
 
 ```bash
 cd ~/projects/sparklin-drive
 ./scripts/build.sh
 ```
 
-`build.sh` 会：体检 → 校验生成物没漂移 → 调打包工具 → 安装到 `~/Library/Audio/Plug-Ins/` → 打印 `ARTIFACT:` 列表。
-装完在 Logic / 任何 AU·VST3·CLAP 宿主里就能看到 **Sparklin Drive Mono** 与 **Sparklin Drive Stereo**（两个独立身份）。
+`build.sh` 会：体检 → 校验生成物没漂移 → 调打包工具 → 安装到用户插件目录 → 打印 `ARTIFACT:` 列表。
 
-> 缺依赖时它不会让你猜 —— 直接打印"在哪个目录、敲什么命令"。
-> 详细步骤、产物路径与故障排查见 **[BUILDING.md](BUILDING.md)**。
+| 平台 | 装到哪 | 额外产物 |
+|---|---|---|
+| macOS | `~/Library/Audio/Plug-Ins/` | `--format dmg` → `<Name> Installer.dmg` |
+| Windows | `%LOCALAPPDATA%\Programs\Common\` | `--format msi` → 系统级 / 用户级两个 MSI |
+| Linux | `~/.vst3` / `~/.clap` | `--format targz` → 可复现 tar.gz |
+
+装完在宿主里能看到 **Sparklin Drive Mono** 与 **Sparklin Drive Stereo**（两个独立身份）。
 
 ```bash
 ./scripts/build.sh doctor     # 只体检
 ./scripts/build.sh test       # 只跑测试（不需要 ngspice）
 ./scripts/build.sh verify     # 需要 ngspice：整机对拍
+./scripts/build.sh --no-install --format targz   # Linux：只出分发包
 ```
+
+> 缺依赖时它不会让你猜 —— 直接打印"在哪个目录、敲什么命令"。
+> 详细步骤、产物路径与故障排查见 **[BUILDING.md](BUILDING.md)**。
 
 ---
 

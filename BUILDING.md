@@ -2,6 +2,8 @@
 
 ## 你需要什么
 
+### macOS（本表）
+
 | 依赖 | 版本 | 检查 | 装法 |
 |---|---|---|---|
 | Rust | stable，≥ 1.80 | `cargo --version` | https://rustup.rs |
@@ -12,30 +14,38 @@
 | **cargo-nih-plug** | rev `de42101` | `cargo --list \| grep nih-plug` | `cargo install --git https://github.com/robbert-vdh/nih-plug.git --rev de42101 cargo-nih-plug --locked` |
 | 网络 | 首次需要 | — | 拉 rustomp 的 tag、nih-plug、打包用第三方源码；受限网络先 `source ~/vpn.env` |
 
-**三个仓的版本要配套**（都在各自仓库里显式声明了）：
+**各仓版本要配套**（都在各自仓库里显式声明了）：
 
 | 组件 | 版本写在哪 |
 |---|---|
-| 框架 `rustomp` | 本仓 `Cargo.toml` 的 `tag = "v0.1.0"` |
-| 打包工具 `rustomp-mac-plugin` | 本仓 `rustomp.toml` 的 `[requires] packer_tag = "v0.1.5"` |
+| 框架 `rustomp` | 本仓 `Cargo.toml` 的 `tag = "v0.1.2"` |
+| macOS 打包工具 `rustomp-mac-plugin` | 本仓 `rustomp.toml` 的 `[requires] packer_tag = "v0.1.7"` |
+| Windows 打包工具 `rustomp-win-plugin` | `v0.3.0`（该仓 Releases） |
+| Linux 打包工具 `rustomp-linux-plugin` | `v0.1.0`（该仓 Releases） |
 | `cargo-nih-plug` | 打包工具的 `deps.lock`（rev `de42101`） |
 
-**依赖约定：三个仓放在同一个目录（本仓的同级）。** 脚本会自动找到它们，不需要设任何环境变量。
+**依赖约定：框架 + 本平台打包工具 + 本仓放在同一个目录（本仓的同级）。** 脚本会自动找到它们，不需要设任何环境变量。
 
 ```text
 some-dir/
-  rustomp/                 ← 框架（读清单 / 校验生成物）
-  rustomp-mac-plugin/      ← 打包工具（AU/VST3/CLAP）
-  sparklin-drive/          ← 本仓
+  rustomp/                    ← 框架（读清单 / 校验生成物）
+  rustomp-mac-plugin/         ← macOS 打包（AU/VST3/CLAP + DMG）
+  rustomp-win-plugin/         ← Windows 打包（VST3/CLAP + MSI）   ← 按平台取一个
+  rustomp-linux-plugin/       ← Linux 打包（VST3/CLAP + tar.gz）
+  sparklin-drive/             ← 本仓
 ```
 
 ```bash
 cd some-dir
-git clone --depth 1 --branch v0.1.0 https://github.com/amonisachicken/rustomp.git
-git clone https://github.com/amonisachicken/rustomp-mac-plugin.git
-./rustomp-mac-plugin/scripts/fetch-third-party.sh     # 只需一次（约 12 MB）
+git clone --depth 1 --branch v0.1.2 https://github.com/amonisachicken/rustomp.git
+git clone -b v0.1.7 https://github.com/amonisachicken/rustomp-mac-plugin.git     # macOS
+git clone -b v0.3.0 https://github.com/amonisachicken/rustomp-win-plugin.git     # Windows
+git clone -b v0.1.0 https://github.com/amonisachicken/rustomp-linux-plugin.git   # Linux
+./rustomp-mac-plugin/scripts/fetch-third-party.sh     # macOS；首次一次
 cd sparklin-drive && ./scripts/build.sh
 ```
+
+Windows / Linux 的依赖与首次拉取命令见各自打包工具的 README；`build.sh` 会按平台自动选。
 
 > 缺哪个仓、该在哪执行什么命令，`./scripts/build.sh doctor` 会直接打印出来
 > （克隆命令里的 tag 自动取自本仓 `Cargo.toml`）。
@@ -109,14 +119,14 @@ cargo run --release --manifest-path ../rustomp/crates/rustomp-gen/Cargo.toml -- 
 
 | 现象 | 原因 / 处理 |
 |---|---|
-| `找不到 macOS 打包工具` | 它要和本仓**同级**：`cd .. && git clone https://github.com/amonisachicken/rustomp-mac-plugin.git` |
+| `找不到 <平台> 打包工具` | 它要和本仓**同级**：`cd .. && git clone -b <tag> https://github.com/amonisachicken/rustomp-<平台>-plugin.git`（mac / win / linux） |
 | `找不到 rustomp 框架` | 同上，同级：`cd .. && git clone --depth 1 --branch <tag> https://github.com/amonisachicken/rustomp.git rustomp`（`<tag>` 见本仓 `Cargo.toml`）；`doctor` 会直接把这条命令打印出来 |
 | 确实不想装框架（不推荐） | `RUSTOMP_SKIP_DRIFT_CHECK=1 ./scripts/build.sh` —— 会跳过"生成物是否过期"的守卫 |
 | `cannot specify features for packages outside of workspace` | 插件被放进了别的 Rust 项目的目录树里（`cargo-nih-plug` 会向上找最顶层 `Cargo.toml`）；把本仓放在独立目录 |
 | `生成物与 rustomp.toml 不一致` | 改了网表/参数却没重新生成 → 按上面第 2、3 步重跑 |
 | `error: failed to load manifest … rustomp-dsp` | 网络问题（首次要拉 rustomp 的 tag）；`source ~/vpn.env` 后重试 |
 | `no such command: nih-plug` | 没装 `cargo-nih-plug`（`doctor` 会给安装命令；注意 `--rev de42101`） |
-| `requires.packer = >=0.1（当前 …）` 报错 | 打包工具版本太旧 → `git -C ../rustomp-mac-plugin checkout <packer_tag>` |
+| `requires.packer = >=0.1（当前 …）` 报错 | 打包工具版本太旧 → 在对应的 `rustomp-<平台>-plugin` 里 checkout 本仓 `packer_tag` 或该仓最新 tag |
 | Logic 里看不到 / 显示旧名字 | `../rustomp-mac-plugin/scripts/reset-logic-cache.sh`（先退出 Logic） |
 | 插件能扫到但没声音 | 确认用的是 **Mono** 或 **Stereo** 版本对应通道条；`check-au.sh` 会自检渲染 |
 | 构建很慢 | 首次要编 nih-plug + egui（~3-5 分钟）；之后增量 |
@@ -127,8 +137,10 @@ cargo run --release --manifest-path ../rustomp/crates/rustomp-gen/Cargo.toml -- 
 
 | 平台 | 状态 |
 |---|---|
-| macOS（AU/VST3/CLAP） | ✅ 本仓脚本支持 |
-| Windows / Linux（VST3/CLAP） | 需要 `rustomp-win-plugin` / `rustomp-linux-plugin`（未开工，同一套契约） |
+| macOS（AU/VST3/CLAP + DMG） | ✅ 本仓脚本支持 |
+| Windows x64（VST3/CLAP + MSI） | ✅ `rustomp-win-plugin`（`build.sh` 自动分派） |
+| Linux x64（VST3/CLAP + tar.gz） | ✅ `rustomp-linux-plugin`（`build.sh` 自动分派） |
+| Windows / Linux arm64 | ⚠ 打包器支持交叉参数，但还没有真机验证 |
 | standalone | 未支持（打包工具 v0.2 计划） |
 | AAX | 不做（需要 Avid 授权） |
 
@@ -139,6 +151,7 @@ cargo run --release --manifest-path ../rustomp/crates/rustomp-gen/Cargo.toml -- 
 | 方式 | 说明 |
 |---|---|
 | **CI**（`.github/workflows/build.yml`） | 干净 macOS runner：三仓 checkout 到同一目录 → `doctor` → `test` → `build --no-install` → 抓 `ARTIFACT:` → 上传产物。**不设任何环境变量** |
+| **Release**（`.github/workflows/release.yml`） | tag `v*` 触发三平台构建（macOS / Windows / Linux）→ 汇总 → `gh release create`（技术预览 / 未签名）；`workflow_dispatch` 只构建不发布 |
 | **隔离验证** | 在 rustomp 仓：`./scripts/verify-isolation.sh`（全新目录、钉 tag、跑真实构建、检查依赖全来自 git） |
 | 本地一键 | `./scripts/build.sh doctor` 体检；`./scripts/build.sh test` 跑测试（不需要 ngspice） |
 

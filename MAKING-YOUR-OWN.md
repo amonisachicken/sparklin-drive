@@ -10,7 +10,7 @@
 ## 0. 先跑通再改（强烈建议）
 
 ```bash
-# 三个仓放同一个目录（框架与打包工具是本仓的同级）
+# 框架 + 本平台打包工具 + 本仓放同一个目录
 mkdir -p ~/projects && cd ~/projects
 git clone --depth 1 --branch v0.1.0 https://github.com/amonisachicken/rustomp.git
 git clone https://github.com/amonisachicken/rustomp-mac-plugin.git
@@ -60,7 +60,7 @@ subtype_stereo = "Md03"
 [requires]
 framework  = ">=0.1,<0.2"     # 你 fork 时用的框架版本范围
 packer     = ">=0.1"
-packer_tag = "v0.1.5"         # 本版用过的打包工具 tag（"缺依赖"提示里会引用它）
+packer_tag = "v0.1.7"         # 本版用过的打包工具 tag（"缺依赖"提示里会引用它）
 designer   = ">=0.1"
 ```
 
@@ -164,7 +164,8 @@ cargo run --release --manifest-path ../rustomp/crates/rustomp-gen/Cargo.toml -- 
 | mono / stereo 想要"一个插件同时支持" | 别这么做：宿主识别不可靠。本仓按 ADR-008 出**两个独立身份** |
 | 发布后才想改 AU subtype | 等于换插件：老工程全部失效 |
 | Logic 里看不到 / 显示旧名字 | `rustomp-mac-plugin/scripts/reset-logic-cache.sh`（先退出 Logic） |
-| 想要 standalone / Windows / Linux | 需要对应的打包工具仓（`rustomp-win-plugin` / `-linux-`），同一套 `ARTIFACT:` 契约 |
+| 想要 standalone | 未支持（三平台的打包器都明确不做） |
+| 想发 Windows / Linux 版 | 用 `rustomp-win-plugin` / `rustomp-linux-plugin`（已落地，同一套 `ARTIFACT:` 契约；`build.sh` 会自动分派） |
 | 三个仓版本不配套 | 框架 tag 在 `Cargo.toml`、打包工具 tag 在 `[requires] packer_tag`、`cargo-nih-plug` rev 在打包工具 `deps.lock` —— 三处要能对上 |
 | 忘了 `fetch-third-party.sh` | 首次构建前必须跑（约 12 MB）；否则 AUv2 的 CMake 会找不到 clap-wrapper |
 

@@ -1,0 +1,266 @@
+name: release
+
+# 三平台二进制发布（技术预览 / 未签名）。
+#   - push tag v*  → 构建三平台产物并创建 GitHub Release（prerelease）
+#   - workflow_dispatch → 只构建、上传 Actions artifact，不创建 Release（用于验证 runner）
+on:
+  push:
+    tags: ["v*"]
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+env:
+  RUSTOMP_TAG: v0.1.2
+  MAC_PACKER_TAG: v0.1.7
+  WIN_PACKER_TAG: v0.3.0
+  LINUX_PACKER_TAG: v0.1.0
+
+jobs:
+  macos:
+    runs-on: macos-14          # arm64；universal 需要两个 target
+    timeout-minutes: 60
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          path: sparklin-drive
+      - uses: actions/checkout@v4
+        with:
+          repository: amonisachicken/rustomp
+          ref: ${{ env.RUSTOMP_TAG }}
+          path: rustomp
+      - uses: actions/checkout@v4
+        with:
+          repository: amonisachicken/rustomp-mac-plugin
+          ref: ${{ env.MAC_PACKER_TAG }}
+          path: rustomp-mac-plugin
+      - uses: dtolnay/rust-toolchain@stable
+        with:
+          targets: aarch64-apple-darwin,x86_64-apple-darwin
+      - uses: Swatinem/rust-cache@v2
+        with:
+          workspaces: sparklin-drive
+      - name: cmake
+        run: brew install cmake
+      - name: cargo-nih-plug
+        run: cargo install --git https://github.com/robbert-vdh/nih-plug.git --rev de42101 cargo-nih-plug --locked
+      - name: Third-party (AU wrapper)
+        working-directory: rustomp-mac-plugin
+        run: ./scripts/fetch-third-party.sh
+      - name: Test
+        working-directory: sparklin-drive
+        run: ./scripts/build.sh test
+      - name: Build (AU/VST3/CLAP + DMG)
+        working-directory: sparklin-drive
+        run: |
+          set -o pipefail
+          ./scripts/build.sh --no-install \
+            --format au --format vst3 --format clap --format dmg 2>&1 | tee /tmp/build.log
+      - name: Collect artifacts
+        working-directory: sparklin-drive
+        run: |
+          set -euo pipefail
+          mkdir -p dist
+          while IFS= read -r p; do
+            [ -e "$p" ] || { echo "missing artifact: $p"; exit 1; }
+            cp -R "$p" dist/
+          done < <(grep '^ARTIFACT: ' /tmp/build.log | sed 's/^ARTIFACT: //')
+          mkdir -p dist/macOS-plugins
+          cp -R dist/*.component dist/*.vst3 dist/*.clap dist/macOS-plugins/
+          (cd dist/macOS-plugins && zip -qry "../Sparklin Drive macOS plugins.zip" .)
+          rm -rf dist/macOS-plugins
+          ls -la dist
+      - uses: actions/upload-artifact@v4
+        with:
+          name: macos
+          path: sparklin-drive/dist
+          if-no-files-found: error
+
+  windows:
+    runs-on: windows-2022
+    timeout-minutes: 60
+    defaults:
+      run:
+        shell: bash
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          path: sparklin-drive
+      - uses: actions/checkout@v4
+        with:
+          repository: amonisachicken/rustomp
+          ref: ${{ env.RUSTOMP_TAG }}
+          path: rustomp
+      - uses: actions/checkout@v4
+        with:
+          repository: amonisachicken/rustomp-win-plugin
+          ref: ${{ env.WIN_PACKER_TAG }}
+          path: rustomp-win-plugin
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - uses: ilammy/msvc-dev-cmd@v1
+        with:
+          arch: x64
+      - uses: dtolnay/rust-toolchain@stable
+      - uses: Swatinem/rust-cache@v2
+        with:
+          workspaces: sparklin-drive
+      - name: cargo-nih-plug
+        run: cargo install --git https://github.com/robbert-vdh/nih-plug.git --rev de42101 cargo-nih-plug --locked
+      - name: Third-party (CLAP SDK + pluginval + WiX)
+        working-directory: rustomp-win-plugin
+        run: ./scripts/fetch-third-party.sh --all
+      - name: Doctor
+        working-directory: sparklin-drive
+        run: ./scripts/build.sh doctor
+      - name: Test
+        working-directory: sparklin-drive
+        run: ./scripts/build.sh test
+      - name: Build (VST3/CLAP + MSI)
+        working-directory: sparklin-drive
+        run: |
+          set -o pipefail
+          ./scripts/build.sh --no-install \
+            --format vst3 --format clap --format msi 2>&1 | tee /tmp/build.log
+      - name: Collect artifacts
+        working-directory: sparklin-drive
+        run: |
+          set -euo pipefail
+          mkdir -p dist
+          while IFS= read -r p; do
+            [ -e "$p" ] || { echo "missing artifact: $p"; exit 1; }
+            cp -R "$p" dist/
+          done < <(grep '^ARTIFACT: ' /tmp/build.log | sed 's/^ARTIFACT: //')
+          python - <<'PY'
+          import pathlib, zipfile
+          dist = pathlib.Path("dist")
+          with zipfile.ZipFile(dist / "Sparklin Drive Windows plugins.zip", "w", zipfile.ZIP_DEFLATED) as z:
+              for p in sorted(dist.iterdir()):
+                  if p.is_dir() and p.suffix in {".vst3", ".clap"}:
+                      for f in sorted(p.rglob("*")):
+                          if f.is_file():
+                              z.write(f, arcname=str(f.relative_to(dist)))
+          PY
+          ls -la dist
+      - uses: actions/upload-artifact@v4
+        with:
+          name: windows
+          path: sparklin-drive/dist
+          if-no-files-found: error
+
+  linux:
+    # 用 Ubuntu 22.04（glibc 2.35）而不是 24.04：产物要能在更老的发行版上跑。
+    runs-on: ubuntu-22.04
+    timeout-minutes: 60
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          path: sparklin-drive
+      - uses: actions/checkout@v4
+        with:
+          repository: amonisachicken/rustomp
+          ref: ${{ env.RUSTOMP_TAG }}
+          path: rustomp
+      - uses: actions/checkout@v4
+        with:
+          repository: amonisachicken/rustomp-linux-plugin
+          ref: ${{ env.LINUX_PACKER_TAG }}
+          path: rustomp-linux-plugin
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - uses: dtolnay/rust-toolchain@stable
+      - uses: Swatinem/rust-cache@v2
+        with:
+          workspaces: sparklin-drive
+      - name: System deps (GUI + tools)
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y \
+            build-essential pkg-config binutils tar gzip xvfb \
+            libx11-dev libxcursor-dev libxrandr-dev libxinerama-dev libxi-dev \
+            libxkbcommon-dev libxkbcommon-x11-dev
+      - name: cargo-nih-plug
+        run: cargo install --git https://github.com/robbert-vdh/nih-plug.git --rev de42101 cargo-nih-plug --locked
+      - name: Third-party (CLAP SDK + pluginval)
+        working-directory: rustomp-linux-plugin
+        run: ./scripts/fetch-third-party.sh --all
+      - name: Doctor
+        working-directory: sparklin-drive
+        run: ./scripts/build.sh doctor
+      - name: Test
+        working-directory: sparklin-drive
+        run: ./scripts/build.sh test
+      - name: Build (VST3/CLAP + tar.gz)
+        working-directory: sparklin-drive
+        env:
+          RUSTOMP_REQUIRE_VERIFY: "1"
+          RUSTOMP_BUILD_BASELINE: "Ubuntu 22.04 (glibc 2.35)"
+        run: |
+          set -o pipefail
+          ./scripts/build.sh --no-install --format targz 2>&1 | tee /tmp/build.log
+      - name: Collect artifacts
+        working-directory: sparklin-drive
+        run: |
+          set -euo pipefail
+          mkdir -p dist
+          while IFS= read -r p; do
+            [ -e "$p" ] || { echo "missing artifact: $p"; exit 1; }
+            cp -R "$p" dist/
+          done < <(grep '^ARTIFACT: ' /tmp/build.log | sed 's/^ARTIFACT: //')
+          ls -la dist
+      - uses: actions/upload-artifact@v4
+        with:
+          name: linux
+          path: sparklin-drive/dist
+          if-no-files-found: error
+
+  publish:
+    # 只有推 tag 才创建 Release；workflow_dispatch 只跑到上面三个构建 job（便于试跑）
+    if: github.event_name == 'push' && startsWith(github.ref, 'refs/tags/v')
+    needs: [macos, windows, linux]
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/download-artifact@v4
+        with:
+          path: artifacts
+      - name: Assemble release assets
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          VERSION="${GITHUB_REF_NAME#v}"
+          mkdir -p release
+          cp artifacts/macos/*.dmg  "release/Sparklin-Drive-${VERSION}-macOS.dmg"
+          cp artifacts/macos/*.zip  "release/Sparklin-Drive-${VERSION}-macOS-plugins.zip"
+          cp artifacts/windows/*"Setup (system).msi"   "release/Sparklin-Drive-${VERSION}-Windows-x64-Setup-system.msi"
+          cp artifacts/windows/*"Setup (per-user).msi" "release/Sparklin-Drive-${VERSION}-Windows-x64-Setup-per-user.msi"
+          cp artifacts/windows/*.zip "release/Sparklin-Drive-${VERSION}-Windows-x64-plugins.zip"
+          cp artifacts/linux/*.tar.gz "release/Sparklin-Drive-${VERSION}-Linux-x64.tar.gz"
+          (cd release && sha256sum *.dmg *.zip *.msi *.tar.gz > SHA256SUMS.txt)
+          cat > release-notes.md <<EOF
+          Sparklin Drive v${VERSION} —— 三平台技术预览（未签名）
+
+          **这是未签名构建**：macOS 首次打开可能被 Gatekeeper 拦，Windows 可能弹 SmartScreen。
+          仅建议测试使用；正式分发需要 Developer ID/公证与 Authenticode 签名。
+
+          | 平台 | 文件 | 安装 |
+          |---|---|---|
+          | macOS（universal） | DMG / plugins.zip | 双击 DMG 里的 `安装.command`，或拖到 ~/Library/Audio/Plug-Ins/ |
+          | Windows x64 | MSI ×2 / plugins.zip | MSI：用户级免 UAC、系统级需管理员；只装一种 |
+          | Linux x64 | tar.gz | 解包后 `./install.sh`（用户级）或 `sudo ./install.sh --system` |
+
+          - Linux 分发包基线：Ubuntu 22.04（glibc 2.35）
+          - 验证：clap-probe（声道/端口）+ pluginval strictness 5；**未在真实 DAW 中人工验收**
+          - 校验和见 SHA256SUMS.txt
+          EOF
+          if gh release view "$GITHUB_REF_NAME" >/dev/null 2>&1; then
+            gh release upload "$GITHUB_REF_NAME" release/* --clobber
+          else
+            gh release create "$GITHUB_REF_NAME" release/* \
+              --title "Sparklin Drive v${VERSION}（技术预览 / 未签名）" \
+              --notes-file release-notes.md \
+              --prerelease
+          fi

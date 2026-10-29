@@ -12,8 +12,8 @@ jobs:
   macos:
     runs-on: macos-14            # arm64 机器；universal 需要两个 target
     env:
-      RUSTOMP_TAG: v0.1.0
-      PACKER_TAG: v0.1.5
+      RUSTOMP_TAG: v0.1.2
+      PACKER_TAG: v0.1.7
     steps:
       - uses: actions/checkout@v4
         with:

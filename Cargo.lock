@@ -1682,11 +1682,11 @@ dependencies = [
 
 [[package]]
 name = "rustomp-dsp"
-version = "0.1.1"
+version = "0.1.2"
 
 [[package]]
 name = "rustomp-gui"
-version = "0.1.1"
+version = "0.1.2"
 dependencies = [
  "nih_plug_egui",
  "png",
@@ -1694,7 +1694,7 @@ dependencies = [
 
 [[package]]
 name = "rustomp-oracle"
-version = "0.1.1"
+version = "0.1.2"
 
 [[package]]
 name = "rustversion"
@@ -1826,7 +1826,7 @@ dependencies = [
 
 [[package]]
 name = "sparklin-drive"
-version = "0.1.0"
+version = "0.1.9"
 dependencies = [
  "nih_plug",
  "nih_plug_egui",
@@ -1837,7 +1837,7 @@ dependencies = [
 
 [[package]]
 name = "sparklin-drive-circuit"
-version = "0.1.0"
+version = "0.1.9"
 dependencies = [
  "rustfft",
  "rustomp-dsp",
