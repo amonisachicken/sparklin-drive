@@ -133,8 +133,8 @@ doctor() {
     printf '  ✓ 框架：%s\n' "$FRAMEWORK"
     printf '  ✓ 平台：%s（打包工具：%s）\n' "$_platform" "$PACKER"
     if [ -x "${PACKER}/pack.sh" ]; then
-        PLUGIN_DIR="$ROOT" "${PACKER}/pack.sh" --help >/dev/null 2>&1 || true
-        "${PACKER}/scripts/doctor.sh" || die "打包工具体检未通过"
+        PLUGIN_DIR="$ROOT" RUSTOMP_ROOT="$FRAMEWORK" \
+            "${PACKER}/scripts/doctor.sh" || die "打包工具体检未通过"
     else
         packer_hint
         return 1
