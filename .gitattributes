@@ -1,0 +1,7 @@
+# 生成物与脚本一律 LF：Windows checkout 若转成 CRLF，`rustomp-gen --check` 会误报漂移
+* text=auto eol=lf
+*.png binary
+*.jpg binary
+*.zip binary
+*.dmg binary
+*.msi binary

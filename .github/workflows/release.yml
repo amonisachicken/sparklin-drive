@@ -189,7 +189,8 @@ jobs:
           sudo apt-get install -y \
             build-essential pkg-config binutils tar gzip xvfb \
             libx11-dev libxcursor-dev libxrandr-dev libxinerama-dev libxi-dev \
-            libxkbcommon-dev libxkbcommon-x11-dev
+            libxkbcommon-dev libxkbcommon-x11-dev \
+            libgl1-mesa-dev libegl1-mesa-dev
       - name: cargo-nih-plug
         run: cargo install --git https://github.com/robbert-vdh/nih-plug.git --rev de42101 cargo-nih-plug --locked
       - name: Third-party (CLAP SDK + pluginval)
