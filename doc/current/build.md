@@ -1,4 +1,8 @@
-# 构建说明
+# 从源码构建
+
+> 只想用插件？直接去 [Releases](https://github.com/amonisachicken/sparklin-drive/releases)
+> 下载，按 [README](../../README.md#获取与安装) 的步骤安装即可，本文不需要看。
+> 这里讲的是**自己编译**：依赖怎么装、脚本怎么跑、产物在哪、报错怎么办。
 
 ## 你需要什么
 
@@ -85,7 +89,7 @@ Windows / Linux 的依赖与首次拉取命令见各自打包工具的 README；
 
 ## 开发期想改框架代码
 
-`Cargo.toml` 里框架依赖钉在 tag（`v0.1.0`），保证任何人 clone 下来都能复现。
+`Cargo.toml` 里框架依赖钉在 tag（`v0.1.2`），保证任何人 clone 下来都能复现。
 你要一边改 rustomp 一边改插件时，用本地覆盖，不要改 `Cargo.toml`：
 
 ```bash
@@ -151,7 +155,7 @@ cargo run --release --manifest-path ../rustomp/crates/rustomp-gen/Cargo.toml -- 
 | 方式 | 说明 |
 |---|---|
 | **CI**（`.github/workflows/build.yml`） | 干净 macOS runner：三仓 checkout 到同一目录 → `doctor` → `test` → `build --no-install` → 抓 `ARTIFACT:` → 上传产物。**不设任何环境变量** |
-| **Release**（`.github/workflows/release.yml`） | tag `v*` 触发三平台构建（macOS / Windows / Linux）→ 汇总 → `gh release create`（技术预览 / 未签名）；`workflow_dispatch` 只构建不发布 |
+| **Release**（`.github/workflows/release.yml`） | tag `v*` 触发三平台构建（macOS / Windows / Linux）→ 汇总 → `gh release create`（技术预览 / 未签名）；`workflow_dispatch` 只构建不发布。产物清单与流程见 [`releasing.md`](releasing.md) |
 | **隔离验证** | 在 rustomp 仓：`./scripts/verify-isolation.sh`（全新目录、钉 tag、跑真实构建、检查依赖全来自 git） |
 | 本地一键 | `./scripts/build.sh doctor` 体检；`./scripts/build.sh test` 跑测试（不需要 ngspice） |
 

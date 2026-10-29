@@ -1,9 +1,14 @@
-# 用这个仓库做你自己的插件
+# 用它做你自己的单块
+
+> 现状文档。本文是**动手清单**，尽量按顺序做；环境出问题看 [`build.md`](build.md)。
 
 本仓**就是模板**：它是"用 rustomp 做一个插件"的完整样本 —— 电路网表、生成代码、面板产物、
 构建脚本、CI 都在。换掉电路和面板，就是另一台机器。
 
-下面按"动手顺序"给出清单。全程只有 4 个地方要改：**身份 / 电路 / 面板 / 文档**。
+下面按"动手顺序"给出清单。全程只有 4 个地方要改：**身份 / 电路 / 面板 / 参数表**。
+
+> 下面的 tag 只是示例，以本仓当前声明为准：框架 tag 看 `Cargo.toml` 的 `tag = "…"`，
+> 打包器 tag 看 `rustomp.toml` 的 `[requires] packer_tag`。
 
 ---
 
@@ -12,10 +17,10 @@
 ```bash
 # 框架 + 本平台打包工具 + 本仓放同一个目录
 mkdir -p ~/projects && cd ~/projects
-git clone --depth 1 --branch v0.1.0 https://github.com/amonisachicken/rustomp.git
-git clone https://github.com/amonisachicken/rustomp-mac-plugin.git
+git clone --depth 1 --branch v0.1.2 https://github.com/amonisachicken/rustomp.git
+git clone -b v0.1.7 https://github.com/amonisachicken/rustomp-mac-plugin.git   # macOS
 ./rustomp-mac-plugin/scripts/fetch-third-party.sh      # 首次：clap-wrapper / CLAP / AudioUnitSDK（约 12 MB）
-git clone git@github.com:amonisachicken/sparklin-drive.git my-drive
+git clone https://github.com/amonisachicken/sparklin-drive.git my-drive
 cd my-drive
 
 ./scripts/build.sh doctor             # 体检：缺什么、怎么装，一次说清
@@ -180,4 +185,4 @@ cargo run --release --manifest-path ../rustomp/crates/rustomp-gen/Cargo.toml -- 
 | 器件库与精度档位 | `rustomp/docs/component-library.md` |
 | 面板契约（`[ui]` 每个字段） | `rustomp-box-designer/docs/01-contract-panel-toml.md` |
 | 导出→装进插件的 6 步 | `rustomp-box-designer/docs/06-export-runbook.md` |
-| 构建故障排查 | 本仓 `BUILDING.md` |
+| 构建故障排查 | 本仓 [`build.md`](build.md) |
