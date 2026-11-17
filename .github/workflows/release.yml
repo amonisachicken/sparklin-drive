@@ -24,7 +24,10 @@ env:
 
 jobs:
   macos:
-    runs-on: macos-14          # arm64；universal 需要两个 target
+    # `macos-14` 已被 GitHub 标记为不支持（"configuration 'macos-14-arm64-us-default'
+    # is not supported"，2026-11-17 实测：job 1 秒内被取消、publish 被跳过）。
+    # `macos-latest` 由 GitHub 维护，arm64 机器 + 两个 target 仍能出 universal。
+    runs-on: macos-latest      # arm64；universal 需要两个 target
     timeout-minutes: 60
     steps:
       - uses: actions/checkout@v4

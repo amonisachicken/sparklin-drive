@@ -10,7 +10,8 @@ on:
 
 jobs:
   macos:
-    runs-on: macos-14            # arm64 机器；universal 需要两个 target
+    # 同 release.yml：macos-14 已不被支持，用 GitHub 维护的 macos-latest
+    runs-on: macos-latest        # arm64 机器；universal 需要两个 target
     env:
       RUSTOMP_TAG: v0.1.3
       PACKER_TAG: v0.1.7
