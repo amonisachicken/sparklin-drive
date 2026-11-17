@@ -17,8 +17,8 @@
 ```bash
 # 框架 + 本平台打包工具 + 本仓放同一个目录
 mkdir -p ~/projects && cd ~/projects
-git clone --depth 1 --branch v0.1.2 https://github.com/amonisachicken/rustomp.git
-git clone -b v0.1.7 https://github.com/amonisachicken/rustomp-mac-plugin.git   # macOS
+git clone --depth 1 --branch v0.1.3 https://github.com/amonisachicken/rustomp.git
+git clone -b v0.1.8 https://github.com/amonisachicken/rustomp-mac-plugin.git   # macOS
 ./rustomp-mac-plugin/scripts/fetch-third-party.sh      # 首次：clap-wrapper / CLAP / AudioUnitSDK（约 12 MB）
 git clone https://github.com/amonisachicken/sparklin-drive.git my-drive
 cd my-drive
@@ -65,7 +65,7 @@ subtype_stereo = "Md03"
 [requires]
 framework  = ">=0.1,<0.2"     # 你 fork 时用的框架版本范围
 packer     = ">=0.1"
-packer_tag = "v0.1.7"         # 本版用过的打包工具 tag（"缺依赖"提示里会引用它）
+packer_tag = "v0.1.8"         # 本版用过的打包工具 tag（"缺依赖"提示里会引用它）
 designer   = ">=0.1"
 ```
 

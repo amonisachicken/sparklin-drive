@@ -72,8 +72,9 @@ Mono 与 Stereo 是两个**独立的插件身份**（`Sparklin Drive Mono` / `Sp
 | | `...-Windows-x64-plugins.zip` | 手动版：解压后把 `.vst3` / `.clap` 放到插件目录 |
 | **Linux x64** | `Sparklin-Drive-<ver>-Linux-x64.tar.gz` | 解包后 `./install.sh`（用户级）或 `sudo ./install.sh --system` |
 
-> **未签名技术预览**：这是个人项目阶段的分发方式，macOS 的 Gatekeeper 和 Windows 的
-> SmartScreen 都可能出声拦你。下面的步骤会教你 30 秒放行。校验和见同页面的 `SHA256SUMS.txt`。
+> **正式版，但未签名**：功能与音色已验证，只是没有买代码签名证书 —— 所以 macOS 的 Gatekeeper
+> 和 Windows 的 SmartScreen 都会出声拦你。下面的步骤会教你 30 秒放行。校验和见同页面的
+> `SHA256SUMS.txt`。
 
 ### 2. macOS：被 Gatekeeper 拦住怎么办
 

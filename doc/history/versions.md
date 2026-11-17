@@ -1,4 +1,4 @@
-# 版本演进（v0.1.0 → v0.1.9）
+# 版本演进（v0.1.0 → v0.1.10）
 
 > 归档：2026-10-29。开发留档。当前状态见 [`../current/architecture.md`](../current/architecture.md)
 > 与 [`../current/releasing.md`](../current/releasing.md)。
@@ -18,13 +18,11 @@
 | `v0.1.7` | 文档成形 | README 顶部加"依赖与获取方式"；新增 `MAKING-YOUR-OWN.md`（今在 `doc/current/`）；CI 钉 packer tag |
 | `v0.1.8` | 版本配套 | 框架升 `rustomp v0.1.1`，打包器升 `v0.1.6` |
 | `v0.1.9` | 三平台发布 | 加 `release.yml`：tag 触发 macOS / Windows / Linux 三平台构建 → GitHub Release（**未签名 prerelease**）。期间修了：Windows 的 MSVC `link.exe` 被 Git 的 GNU `link` 遮住、Linux 缺 `x11-xcb.pc` 与 OpenGL 头、Windows checkout 的 CRLF 导致生成物 `--check` 误报、`gh release` 需要 `-R` |
+| `v0.1.10` | **第一个正式版** | 框架钉到 `rustomp v0.1.3`（固定电位端子雅可比修复）、mac 打包器钉到 `v0.1.8`；重新生成电路/外壳（codegen 合并了重复的 `if`）。音色与对拍数字**未变**（THD 27.58% / h2 3.92%）。Release 不再标 prerelease（仍未签名） |
 
-## tag 之后的改动（未发版）
-
-| 改动 | 说明 |
-|---|---|
-| 文档重构 | README 改成产品向（面板 / 音色 / 安装 / 模板 / 许可），技术细节迁到 `doc/current/`，历史迁到 `doc/history/` |
-| 框架升到 `v0.1.2` | 本工作区已指向 `v0.1.2`；mac 打包器 `v0.1.7`、win `v0.3.0`、linux `v0.1.0` 配套不变 |
+> `v0.1.9` 之后还有一轮**未单独发版**的整理，已随 `v0.1.10` 一起发出：
+> README 改成产品向（面板 / 音色 / 安装 / 模板 / 许可），技术细节拆进 `doc/current/`、
+> 历史归档进 `doc/history/`。
 
 ## 为什么 tag 打这么密
 

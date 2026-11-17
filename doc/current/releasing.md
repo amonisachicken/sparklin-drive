@@ -10,9 +10,9 @@
 
 | 组件 | 版本 | 写在哪 |
 |---|---|---|
-| 本插件 | `v0.1.9` | `Cargo.toml` 的 `workspace.package.version` |
-| 框架 `rustomp` | `v0.1.2` | `Cargo.toml` 的 `workspace.dependencies`（`tag = "v0.1.2"`） |
-| macOS 打包器 | `v0.1.7` | `rustomp.toml` 的 `[requires] packer_tag` |
+| 本插件 | `v0.1.10` | `Cargo.toml` 的 `workspace.package.version` |
+| 框架 `rustomp` | `v0.1.3` | `Cargo.toml` 的 `workspace.dependencies`（`tag = "v0.1.3"`） |
+| macOS 打包器 | `v0.1.8` | `rustomp.toml` 的 `[requires] packer_tag` |
 | Windows 打包器 | `v0.3.0` | `.github/workflows/release.yml` 的环境变量 |
 | Linux 打包器 | `v0.1.0` | 同上 |
 | `cargo-nih-plug` | rev `de42101` | 打包器的 `deps.lock` |
@@ -77,7 +77,10 @@
 | Linux | 不涉及 | 分发包校验和（已有 `SHA256SUMS.txt`） |
 
 后果：macOS 首次运行会被 Gatekeeper 拦（README 里有放行图文步骤），Windows 会弹 SmartScreen。
-因此 Release 一律标记 **prerelease / 技术预览**，不宣称可用于生产。
+
+从 `v0.1.10` 起 Release **不再标 prerelease**（作为"正式版"分发）：功能与音色已验证，
+但"未签名"意味着首次安装会有安全提示 —— 这一点必须在发布说明和 README 里写清楚，
+不要让它看起来像"签名版"。要消掉提示需要 Developer ID + 公证 / Authenticode，属于单独一项。
 
 ---
 

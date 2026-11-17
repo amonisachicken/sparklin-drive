@@ -22,8 +22,8 @@
 
 | 组件 | 版本写在哪 |
 |---|---|
-| 框架 `rustomp` | 本仓 `Cargo.toml` 的 `tag = "v0.1.2"` |
-| macOS 打包工具 `rustomp-mac-plugin` | 本仓 `rustomp.toml` 的 `[requires] packer_tag = "v0.1.7"` |
+| 框架 `rustomp` | 本仓 `Cargo.toml` 的 `tag = "v0.1.3"` |
+| macOS 打包工具 `rustomp-mac-plugin` | 本仓 `rustomp.toml` 的 `[requires] packer_tag = "v0.1.8"` |
 | Windows 打包工具 `rustomp-win-plugin` | `v0.3.0`（该仓 Releases） |
 | Linux 打包工具 `rustomp-linux-plugin` | `v0.1.0`（该仓 Releases） |
 | `cargo-nih-plug` | 打包工具的 `deps.lock`（rev `de42101`） |
@@ -41,8 +41,8 @@ some-dir/
 
 ```bash
 cd some-dir
-git clone --depth 1 --branch v0.1.2 https://github.com/amonisachicken/rustomp.git
-git clone -b v0.1.7 https://github.com/amonisachicken/rustomp-mac-plugin.git     # macOS
+git clone --depth 1 --branch v0.1.3 https://github.com/amonisachicken/rustomp.git
+git clone -b v0.1.8 https://github.com/amonisachicken/rustomp-mac-plugin.git     # macOS
 git clone -b v0.3.0 https://github.com/amonisachicken/rustomp-win-plugin.git     # Windows
 git clone -b v0.1.0 https://github.com/amonisachicken/rustomp-linux-plugin.git   # Linux
 ./rustomp-mac-plugin/scripts/fetch-third-party.sh     # macOS；首次一次
@@ -89,7 +89,7 @@ Windows / Linux 的依赖与首次拉取命令见各自打包工具的 README；
 
 ## 开发期想改框架代码
 
-`Cargo.toml` 里框架依赖钉在 tag（`v0.1.2`），保证任何人 clone 下来都能复现。
+`Cargo.toml` 里框架依赖钉在 tag（`v0.1.3`），保证任何人 clone 下来都能复现。
 你要一边改 rustomp 一边改插件时，用本地覆盖，不要改 `Cargo.toml`：
 
 ```bash
@@ -155,7 +155,7 @@ cargo run --release --manifest-path ../rustomp/crates/rustomp-gen/Cargo.toml -- 
 | 方式 | 说明 |
 |---|---|
 | **CI**（`.github/workflows/build.yml`） | 干净 macOS runner：三仓 checkout 到同一目录 → `doctor` → `test` → `build --no-install` → 抓 `ARTIFACT:` → 上传产物。**不设任何环境变量** |
-| **Release**（`.github/workflows/release.yml`） | tag `v*` 触发三平台构建（macOS / Windows / Linux）→ 汇总 → `gh release create`（技术预览 / 未签名）；`workflow_dispatch` 只构建不发布。产物清单与流程见 [`releasing.md`](releasing.md) |
+| **Release**（`.github/workflows/release.yml`） | tag `v*` 触发三平台构建（macOS / Windows / Linux）→ 汇总 → `gh release create`（正式版，未签名）；`workflow_dispatch` 只构建不发布。产物清单与流程见 [`releasing.md`](releasing.md) |
 | **隔离验证** | 在 rustomp 仓：`./scripts/verify-isolation.sh`（全新目录、钉 tag、跑真实构建、检查依赖全来自 git） |
 | 本地一键 | `./scripts/build.sh doctor` 体检；`./scripts/build.sh test` 跑测试（不需要 ngspice） |
 

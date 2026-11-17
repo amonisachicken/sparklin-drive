@@ -24,7 +24,7 @@ README 只讲「这是什么、怎么装、怎么用」。所有细节在这里�
 | 文档 | 内容 |
 |---|---|
 | [`history/README.md`](history/README.md) | 归档索引与归档流程 |
-| [`history/versions.md`](history/versions.md) | 版本演进 v0.1.0 → v0.1.9（每个 tag 解决了什么） |
+| [`history/versions.md`](history/versions.md) | 版本演进 v0.1.0 → v0.1.10（每个 tag 解决了什么） |
 | [`history/legacy-ab.md`](history/legacy-ab.md) | 与手推 WDF 实现（legacy）的 AB 测试：方法、结论、THD 差 0.08 pp |
 
 外部参考（不在本仓，只读）：

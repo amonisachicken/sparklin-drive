@@ -1,7 +1,7 @@
 name: release
 
-# 三平台二进制发布（技术预览 / 未签名）。
-#   - push tag v*  → 构建三平台产物并创建 GitHub Release（prerelease）
+# 三平台二进制发布（正式版，但仍未签名）。
+#   - push tag v*  → 构建三平台产物并创建 GitHub Release（stable）
 #   - workflow_dispatch → 只构建、上传 Actions artifact，不创建 Release（用于验证 runner）
 on:
   push:
@@ -17,8 +17,8 @@ permissions:
   contents: write
 
 env:
-  RUSTOMP_TAG: v0.1.2
-  MAC_PACKER_TAG: v0.1.7
+  RUSTOMP_TAG: v0.1.3
+  MAC_PACKER_TAG: v0.1.8
   WIN_PACKER_TAG: v0.3.0
   LINUX_PACKER_TAG: v0.1.0
 
@@ -260,10 +260,11 @@ jobs:
           cp artifacts/linux/*.tar.gz "release/Sparklin-Drive-${VERSION}-Linux-x64.tar.gz"
           (cd release && sha256sum *.dmg *.zip *.msi *.tar.gz > SHA256SUMS.txt)
           cat > release-notes.md <<EOF
-          Sparklin Drive v${VERSION} —— 三平台技术预览（未签名）
+          Sparklin Drive v${VERSION} —— 三平台正式版（未签名）
 
-          **这是未签名构建**：macOS 首次打开可能被 Gatekeeper 拦，Windows 可能弹 SmartScreen。
-          仅建议测试使用；正式分发需要 Developer ID/公证与 Authenticode 签名。
+          **这是未签名构建**：macOS 首次打开可能被 Gatekeeper 拦（README 里有图文放行步骤），
+          Windows 可能弹 SmartScreen。想要"下载即用、无安全提示"需要 Developer ID + 公证
+          与 Authenticode 签名 —— 那是另一个工程项，当前版本只能做到"装得上、能出声"。
 
           | 平台 | 文件 | 安装 |
           |---|---|---|
@@ -273,13 +274,14 @@ jobs:
 
           - Linux 分发包基线：Ubuntu 22.04（glibc 2.35）
           - 验证：clap-probe（声道/端口）+ pluginval strictness 5；**未在真实 DAW 中人工验收**
+          - 音色与 v0.1.9 一致（框架升级到 rustomp v0.1.3 只修了固定电位端子的求解 bug，
+            Sparklin Drive 的对拍数字未变：THD 27.58% / h2 3.92%）
           - 校验和见 SHA256SUMS.txt
           EOF
           if gh release view "$TAG" -R "$GITHUB_REPOSITORY" >/dev/null 2>&1; then
             gh release upload "$TAG" release/* --clobber -R "$GITHUB_REPOSITORY"
           else
             gh release create "$TAG" release/* -R "$GITHUB_REPOSITORY" \
-              --title "Sparklin Drive v${VERSION}（技术预览 / 未签名）" \
-              --notes-file release-notes.md \
-              --prerelease
+              --title "Sparklin Drive v${VERSION}" \
+              --notes-file release-notes.md
           fi
